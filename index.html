@@ -1019,14 +1019,8 @@
         <button class="app-btn" data-open="https://maps.google.com/">グーぐるマップ</button>
     </div>
 
-    <div class="section-title">
-        <div style="font-weight: 900;">ワンタッチ電話</div>
-        <div class="one-touch-desc">
-            電話したい相手のボタンを右へ動かします。右端に移動したら丸い電話マークが点滅し電話画面へ切り替わり電話がかけられます。名前や電話番号を追加・書き換えする時はボタンを２秒押し続けて下さい。記入画面が表示されます。
-        </div>
-    </div>
-
-    <div id="phoneList" class="phone-slider-list"></div>
+    <div class="section-title"><div style="font-weight:900;">電話帳</div></div>
+    <div style="text-align:center;margin:14px auto 22px"><button type="button" onclick="location.href='phone.html'" aria-label="電話帳を開く" style="background:#fff;border:2px solid #cbd5e1;border-radius:20px;padding:14px;cursor:pointer;box-shadow:0 5px 16px #0002;width:min(240px,80%)"><img src="phone.svg" alt="白い卓上電話機" style="width:100%;display:block"><span style="display:block;color:#153a63;font-weight:900;font-size:1.2rem">電話帳を開く（10件）</span></button></div>
 
     <div class="section-title">
         <div style="font-weight: 900;">お買い物情報（大分市版）</div>
@@ -1685,142 +1679,6 @@
           document.addEventListener("visibilitychange", ()=>{ if(document.hidden) stopPlayback(); });
           window.addEventListener("pagehide", ()=>{ stopPlayback(); });
         })();
-
-        /* ====== ワンタッチ電話 ====== */
-        const phoneList = document.getElementById("phoneList");
-        const PHONE_COUNT = 8;
-
-        function getPhoneItem(i){
-          const name = loadValue("phone_name_" + i, "未登録");
-          const num  = loadValue("phone_num_"  + i, "");
-          return {name, num};
-        }
-        function setPhoneItem(i, name, num){
-          saveValue("phone_name_" + i, name);
-          saveValue("phone_num_"  + i, num);
-        }
-
-        function renderPhoneList(){
-          if(!phoneList) return;
-          phoneList.innerHTML = "";
-          for(let i=0;i<PHONE_COUNT;i++){
-            const lane = document.createElement("div");
-            lane.className = "phone-lane";
-
-            const track = document.createElement("div");
-            track.className = "phone-lane-track";
-
-            const handle = document.createElement("div");
-            handle.className = "phone-handle";
-            handle.setAttribute("data-i", String(i));
-
-            const t = document.createElement("div");
-            t.className = "phone-handle-text";
-
-            const nm = document.createElement("div");
-            nm.className = "phone-handle-name";
-            const it = getPhoneItem(i);
-            nm.textContent = it.name;
-
-            const nu = document.createElement("div");
-            nu.className = "phone-handle-number";
-            nu.textContent = it.num;
-
-            t.appendChild(nm);
-            t.appendChild(nu);
-            handle.appendChild(t);
-
-            const goal = document.createElement("div");
-            goal.className = "phone-goal";
-            const gi = document.createElement("div");
-            gi.className = "phone-goal-icon";
-            gi.textContent = "☎";
-            goal.appendChild(gi);
-
-            lane.appendChild(track);
-            lane.appendChild(handle);
-            lane.appendChild(goal);
-            phoneList.appendChild(lane);
-
-            setupPhoneHandle(lane, handle, goal, i);
-          }
-        }
-
-        function setupPhoneHandle(lane, handle, goal, i){
-          let startX = 0;
-          let startLeft = 0;
-          let dragging = false;
-
-          longPress(handle, 2000, ()=>{
-            const it = getPhoneItem(i);
-            const name = prompt("名前", it.name);
-            if(name === null) return;
-            const num = prompt("電話番号", it.num);
-            if(num === null) return;
-            setPhoneItem(i, name, num);
-            renderPhoneList();
-            toast("保存しました");
-          });
-
-          handle.addEventListener("pointerdown", (e)=>{
-            dragging = true;
-            handle.setPointerCapture(e.pointerId);
-            startX = e.clientX;
-            const rect = handle.getBoundingClientRect();
-            const laneRect = lane.getBoundingClientRect();
-            startLeft = rect.left - laneRect.left;
-            handle.style.transition = "none";
-          });
-
-          handle.addEventListener("pointermove", (e)=>{
-            if(!dragging) return;
-            const dx = e.clientX - startX;
-            const laneRect = lane.getBoundingClientRect();
-            const goalRight = 6 + 42;
-            const maxLeft = laneRect.width - handle.offsetWidth - goalRight;
-            const minLeft = 6;
-            let left = startLeft + dx;
-            if(left < minLeft) left = minLeft;
-            if(left > maxLeft) left = maxLeft;
-            handle.style.left = left + "px";
-
-            if(left >= maxLeft - 6) goal.classList.add("blink");
-            else goal.classList.remove("blink");
-          });
-
-          handle.addEventListener("pointerup", ()=>{
-            if(!dragging) return;
-            dragging = false;
-            handle.style.transition = "left 0.15s ease";
-
-            const laneRect = lane.getBoundingClientRect();
-            const goalRight = 6 + 42;
-            const maxLeft = laneRect.width - handle.offsetWidth - goalRight;
-
-            const left = parseFloat(handle.style.left || "6");
-            const it = getPhoneItem(i);
-
-            if(left >= maxLeft - 6){
-              if(it.num && it.num.trim()){
-                goal.classList.add("blink");
-                setTimeout(()=> goal.classList.remove("blink"), 800);
-                location.href = "tel:" + it.num.trim();
-              }else{
-                toast("電話番号が未登録です（２秒押して登録）");
-              }
-            }
-
-            handle.style.left = "6px";
-          });
-
-          handle.addEventListener("pointercancel", ()=>{
-            dragging = false;
-            handle.style.transition = "left 0.15s ease";
-            handle.style.left = "6px";
-            goal.classList.remove("blink");
-          });
-        }
-        renderPhoneList();
 
         /* ====== データ記録／復活（JSON 1本） ====== */
         const btnBackup  = document.getElementById("btnBackup");
