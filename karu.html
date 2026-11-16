@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>カルテ画面</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --blue:#1d4ed8; }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      padding:16px;
+      background:#eaf6ff;
+      font-family:"Hiragino Sans","Noto Sans JP",system-ui,sans-serif;
+    }
+
+    /* 外周 */
+    .outer-frame{
+      max-width:960px;
+      margin:0 auto;
+      border:4px solid var(--blue);
+      border-radius:14px;
+      padding:12px 14px 20px;
+      background:linear-gradient(180deg,#f0f7ff,#e6f0ff);
+    }
+
+    /* タイトル帯 */
+    .header-title{
+      border:2px solid var(--blue);
+      background:#c7dcff;
+      text-align:center;
+      font-weight:700;
+      color:#000;
+      padding:8px 0;
+      border-radius:8px;
+      margin-bottom:14px;
+      font-size:1.05rem;
+    }
+
+    .photo-wrapper{
+      display:flex;
+      justify-content:center;
+      margin-bottom:16px;
+    }
+
+    .photo-frame{
+      width:180px;height:180px;
+      border-radius:16px;
+      border:6px solid var(--blue);
+      background:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 8px 18px rgba(15,23,42,.35);
+      color:#6b7280;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .photo-frame img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      border-radius:inherit;
+      display:block;
+    }
+
+    .info-table-wrapper{
+      margin:0 auto 18px;
+      max-width:560px;
+    }
+
+    table.info-table{
+      width:100%;
+      border-collapse:collapse;
+      border:3px solid var(--blue);
+      background:#fff;
+    }
+
+    .info-table th,
+    .info-table td{
+      border:1px solid var(--blue);
+      padding:6px 8px;
+      font-size:.95rem;
+      background:#fff;
+    }
+
+    .info-table th{
+      width:40%;
+      font-weight:600;
+      color:#1f2937;
+      white-space:nowrap;
+    }
+
+    .info-table td{
+      color:#111827;
+      min-height:1.8em;
+    }
+
+    .info-hint{
+      max-width:560px;
+      margin:4px auto 14px;
+      font-size:.95rem;
+      color:#000;
+    }
+
+    .memo-section{
+      margin:0 auto 12px;
+      max-width:100%;
+    }
+
+    .memo-title{
+      font-size:1rem;
+      font-weight:700;
+      padding:4px 10px;
+      border:2px solid #93c5fd;
+      background:#e5f0ff;
+      display:inline-block;
+      border-radius:6px;
+      margin-bottom:4px;
+    }
+
+    .memo-box{
+      width:100%;
+      border:4px solid var(--blue);
+      border-radius:10px;
+      background:#fff;
+      min-height:220px;
+      padding:8px 10px;
+      font-size:.95rem;
+      overflow-wrap:break-word;
+    }
+
+    .memo-box img{
+      max-width:50%;
+      height:auto;
+      display:inline-block;
+      margin:4px 0;
+    }
+
+    .tag-section{
+      max-width:780px;
+      margin:4px auto 10px;
+      padding:8px 10px 10px;
+      background:#f9fbff;
+      border-radius:10px;
+      border:1px solid #bfdbfe;
+      box-shadow:0 4px 10px rgba(15,23,42,.18);
+      font-size:.9rem;
+    }
+
+    .tag-header{
+      font-weight:700;
+      color:#1f2937;
+      margin:4px 0 4px;
+    }
+
+    .tag-buttons-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      margin-bottom:6px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:999px;
+      padding:8px 16px;
+      font-size:.9rem;
+      font-weight:600;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .btn-tag{
+      background:linear-gradient(135deg,#eef2ff,#e0ecff);
+      color:#1f2937;
+      border:1px solid #93c5fd;
+      box-shadow:0 2px 4px rgba(148,163,184,.65);
+    }
+
+    .btn-tag:active{
+      transform:translateY(1px);
+      box-shadow:0 1px 2px rgba(148,163,184,.8);
+    }
+
+    .datetime-row{
+      display:flex;
+      justify-content:flex-start;
+      margin-top:4px;
+    }
+
+    .btn-datetime{
+      background:linear-gradient(135deg,#f97316,#facc15);
+      color:#111827;
+      border:2px solid #ea580c;
+      padding:9px 22px;
+      font-size:.95rem;
+      box-shadow:0 4px 10px rgba(234,88,12,.55);
+    }
+
+    .btn-datetime:active{
+      transform:translateY(1px);
+      box-shadow:0 2px 6px rgba(234,88,12,.7);
+    }
+
+    .buttons-row{
+      max-width:780px;
+      margin:12px auto 0;
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+
+    .btn-image{
+      background:linear-gradient(135deg,#ef4444,#fb7185);
+      color:#fff;
+      font-size:.95rem;
+      padding:10px 24px;
+      border-radius:999px;
+      border:2px solid #b91c1c;
+      box-shadow:0 5px 12px rgba(185,28,28,.65);
+    }
+
+    .btn-back{
+      background:linear-gradient(135deg,#2563eb,#38bdf8);
+      color:#fff;
+      margin-left:auto;
+      font-size:.95rem;
+      padding:10px 24px;
+      border-radius:999px;
+      border:2px solid #1d4ed8;
+      box-shadow:0 5px 12px rgba(37,99,235,.65);
+    }
+
+    .btn-image:active,
+    .btn-back:active{
+      transform:translateY(1px);
+      box-shadow:0 3px 7px rgba(15,23,42,.75);
+    }
+
+    .footer-note-block{
+      max-width:780px;
+      margin:10px auto 0;
+      font-size:.9rem;
+      color:#000;
+      line-height:1.6;
+    }
+  </style>
+</head>
+
+<body>
+<div class="outer-frame">
+
+  <div class="header-title">利用者カルテ</div>
+
+  <div class="photo-wrapper">
+    <div class="photo-frame" id="photo-frame">顔写真</div>
+  </div>
+
+  <div class="info-table-wrapper">
+    <table class="info-table">
+      <tr>
+        <th>カルテ番号</th>
+        <td id="field-karute-no"></td>
+      </tr>
+      <tr>
+        <th>氏名</th>
+        <td id="field-name"></td>
+      </tr>
+      <tr>
+        <th>性別</th>
+        <td id="field-gender"></td>
+      </tr>
+      <tr>
+        <th>年齢</th>
+        <td id="field-age"></td>
+      </tr>
+      <tr>
+        <th>障害内容と等級</th>
+        <td id="field-disability"></td>
+      </tr>
+      <tr>
+        <th>外見特徴</th>
+        <td id="field-appearance"></td>
+      </tr>
+      <tr>
+        <th>個性</th>
+        <td id="field-personality"></td>
+      </tr>
+      <tr>
+        <th>備考</th>
+        <td id="field-notes"></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="info-hint">
+    ※「顔写真」は２秒押し続けると画像を変更できます。<br>
+    ※「性別」は２秒押すごとに「男性→女性→不明」を繰り返します。<br>
+    ※「年齢」は２秒押すと数字入力になり、半角２文字で設定できます。<br>
+    ※「障害内容と等級・外見特徴・個性・備考」は右側の枠を２秒押し続けると書き換え可能になります。<br>
+    ※「カルテ番号・氏名」はこの画面では書き換えできません（リスト画面で設定された内容が表示されます）。
+  </div>
+
+  <div class="memo-section">
+    <div class="memo-title">自由記録メモ</div>
+    <div class="memo-box" id="free-memo" contenteditable="true"></div>
+  </div>
+
+  <div class="tag-section">
+    <div class="tag-header">家事</div>
+    <div class="tag-buttons-row">
+      <button type="button" class="btn btn-tag" data-insert-text="買物">買物</button>
+      <button type="button" class="btn btn-tag" data-insert-text="掃除">掃除</button>
+      <button type="button" class="btn btn-tag" data-insert-text="洗濯">洗濯</button>
+      <button type="button" class="btn btn-tag" data-insert-text="洗い物">洗い物</button>
+      <button type="button" class="btn btn-tag" data-insert-text="片づけ">片づけ</button>
+      <button type="button" class="btn btn-tag" data-insert-text="遅刻">遅刻</button>
+      <button type="button" class="btn btn-tag" data-insert-text="早退">早退</button>
+      <button type="button" class="btn btn-tag" data-insert-text="連絡">連絡</button>
+      <button type="button" class="btn btn-tag" data-insert-text="開始">開始</button>
+      <button type="button" class="btn btn-tag" data-insert-text="完了">完了</button>
+    </div>
+
+    <div class="tag-header">症状</div>
+    <div class="tag-buttons-row">
+      <button type="button" class="btn btn-tag" data-insert-text="体調">体調</button>
+      <button type="button" class="btn btn-tag" data-insert-text="食欲有り">食欲有り</button>
+      <button type="button" class="btn btn-tag" data-insert-text="食欲無し">食欲無し</button>
+      <button type="button" class="btn btn-tag" data-insert-text="頭痛">頭痛</button>
+      <button type="button" class="btn btn-tag" data-insert-text="めまい">めまい</button>
+      <button type="button" class="btn btn-tag" data-insert-text="腰痛">腰痛</button>
+      <button type="button" class="btn btn-tag" data-insert-text="発熱">発熱</button>
+      <button type="button" class="btn btn-tag" data-insert-text="嘔吐">嘔吐</button>
+      <button type="button" class="btn btn-tag" data-insert-text="風邪気味">風邪気味</button>
+    </div>
+
+    <div class="tag-header">医療的行為</div>
+    <div class="tag-buttons-row">
+      <button type="button" class="btn btn-tag" data-insert-text="消毒">消毒</button>
+      <button type="button" class="btn btn-tag" data-insert-text="投薬">投薬</button>
+      <button type="button" class="btn btn-tag" data-insert-text="体温測定">体温測定</button>
+      <button type="button" class="btn btn-tag" data-insert-text="通院">通院</button>
+      <button type="button" class="btn btn-tag" data-insert-text="血圧測定">血圧測定</button>
+      <button type="button" class="btn btn-tag" data-insert-text="入院">入院</button>
+      <button type="button" class="btn btn-tag" data-insert-text="声かけ">声かけ</button>
+      <button type="button" class="btn btn-tag" data-insert-text="排泄">排泄</button>
+      <button type="button" class="btn btn-tag" data-insert-text="ストマ">ストマ</button>
+      <button type="button" class="btn btn-tag" data-insert-text="カテーテル">カテーテル</button>
+    </div>
+
+    <div class="datetime-row">
+      <button type="button" class="btn btn-datetime" id="btn-datetime">日時</button>
+    </div>
+  </div>
+
+  <div class="buttons-row">
+    <button class="btn btn-image" id="btn-image">画像貼り付け</button>
+    <button class="btn btn-back" id="btn-back" onclick="window.location.href='risu.html'">戻る</button>
+  </div>
+
+  <div class="footer-note-block">
+    ※画像貼り付けボタンを押すとカーソルの位置に選んだ画像が貼れます<br>
+    ※画像を２秒押すと消えます　スマホからは消えません<br>
+    ※戻るを押すとカルテリストに戻ります
+  </div>
+
+  <input type="file" id="image-input" accept="image/*" style="display:none">
+  <input type="file" id="photo-input" accept="image/*" style="display:none">
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    /* ====== 便利関数 ====== */
+    function pad2(n){ return String(n).padStart(2,'0'); }
+
+    /* ====== アプリ（WebView）用：画像選択ブリッジ判定 ======
+       - Androidアプリ側が用意できる想定の関数：
+         window.HelmatePick.pickImage() -> Promise<string> (uri)
+         window.HelmatePick.pickImageWithName() -> Promise<string> ("uri|name")
+       - 無い場合は従来の file input へフォールバック
+    */
+    function hasAppPicker(){
+      try{
+        return !!(window.HelmatePick && (typeof window.HelmatePick.pickImage === "function" || typeof window.HelmatePick.pickImageWithName === "function"));
+      }catch(e){ return false; }
+    }
+
+    async function appPickImage(){
+      // 返り値は {uri, name}
+      const ret = { uri:"", name:"" };
+      if(!hasAppPicker()) return ret;
+
+      try{
+        if(typeof window.HelmatePick.pickImageWithName === "function"){
+          const s = await window.HelmatePick.pickImageWithName();
+          if(!s) return ret;
+          const parts = String(s).split("|");
+          ret.uri = parts[0] || "";
+          ret.name = parts.slice(1).join("|") || "";
+          return ret;
+        }
+        if(typeof window.HelmatePick.pickImage === "function"){
+          const u = await window.HelmatePick.pickImage();
+          if(!u) return ret;
+          ret.uri = String(u);
+          ret.name = "";
+          return ret;
+        }
+      }catch(e){
+        return ret;
+      }
+      return ret;
+    }
+
+    /* ==== karudata を使ったカルテ番号別データ管理 ==== */
+    const KARUDATA_KEY = "karudata";
+    let karudata = {};
+
+    function loadKaruData() {
+      try {
+        const raw = localStorage.getItem(KARUDATA_KEY);
+        if (!raw) { karudata = {}; return; }
+        const obj = JSON.parse(raw);
+        karudata = (obj && typeof obj === "object") ? obj : {};
+      } catch (e) { karudata = {}; }
+    }
+
+    function saveKaruData() {
+      try { localStorage.setItem(KARUDATA_KEY, JSON.stringify(karudata)); } catch (e) {}
+    }
+
+    loadKaruData();
+
+    // ====== risu.html から渡された選択情報（sessionStorage優先） ======
+    let selectedPayload = null;
+    try {
+      const rawSel = sessionStorage.getItem("karu_selected") || localStorage.getItem("karu_selected");
+      if (rawSel) selectedPayload = JSON.parse(rawSel);
+    } catch (e) {}
+
+    // risuからは {id:"01", name:"氏名 よみがな"} が来る想定
+    // 互換のため {karteNo:...} も受ける
+    let currentKarteNoStr = "";
+    if (selectedPayload) {
+      if (selectedPayload.id) currentKarteNoStr = String(selectedPayload.id);
+      else if (selectedPayload.karteNo) currentKarteNoStr = String(selectedPayload.karteNo);
+    }
+
+    // 数字として解釈できるなら 01〜99 表示に統一
+    let currentKarteNo = 0;
+    if (currentKarteNoStr) {
+      const n = parseInt(currentKarteNoStr, 10);
+      if (!isNaN(n)) currentKarteNo = n;
+    }
+    if (!currentKarteNo) {
+      const alt = localStorage.getItem("selected_karte_no");
+      if (alt) {
+        const n = parseInt(alt, 10);
+        if (!isNaN(n)) currentKarteNo = n;
+      }
+    }
+
+    // 0のときは「未選択」扱い
+    const currentKey = String(currentKarteNo || 0);
+
+    // ====== このカルテ専用の保存キー（★重要：カルテごとに分ける） ======
+    const MEMO_STORAGE_KEY     = "karte_free_memo_html_" + currentKey;
+
+    // （互換）旧：DataURL保存
+    const PHOTO_STORAGE_KEY    = "karte_face_photo_data_" + currentKey;
+
+    // ★新：URI保存（アプリ用）
+    const PHOTO_URI_KEY        = "karte_face_photo_uri_" + currentKey;
+    const PHOTO_NAME_KEY       = "karte_face_photo_name_" + currentKey;
+
+    // karudata エントリを用意・更新
+    let entry = karudata[currentKey];
+    if (!entry) {
+      entry = {
+        no: currentKarteNo,
+        name: (selectedPayload && selectedPayload.name) ? selectedPayload.name : "",
+        sex:  (selectedPayload && selectedPayload.sex)  ? selectedPayload.sex  : "不明",
+        age:  (selectedPayload && selectedPayload.age)  ? selectedPayload.age  : "",
+        disability: "",
+        appearance: "",
+        personality: "",
+        notes: "",
+        createdAt: Date.now()
+      };
+      karudata[currentKey] = entry;
+    } else {
+      // ★risuから名前が来たら常に上書き（最新の表札を反映）
+      if (selectedPayload) {
+        if (selectedPayload.name != null) entry.name = selectedPayload.name;
+        if (selectedPayload.sex  != null) entry.sex  = selectedPayload.sex;
+        if (selectedPayload.age  != null) entry.age  = selectedPayload.age;
+      }
+      if (!("disability" in entry)) entry.disability = "";
+      if (!("appearance" in entry)) entry.appearance = "";
+      if (!("personality" in entry)) entry.personality = "";
+      if (!("notes" in entry)) entry.notes = "";
+      if (!("createdAt" in entry)) entry.createdAt = Date.now();
+    }
+    saveKaruData();
+
+    // --- 画面への反映（カルテ番号／氏名／性別／年齢） ---
+    const elKarteNo = document.getElementById("field-karute-no");
+    const elName    = document.getElementById("field-name");
+    const elGender  = document.getElementById("field-gender");
+    const elAge     = document.getElementById("field-age");
+    const elDis     = document.getElementById("field-disability");
+    const elApp     = document.getElementById("field-appearance");
+    const elPer     = document.getElementById("field-personality");
+    const elNotes   = document.getElementById("field-notes");
+
+    if (elKarteNo) elKarteNo.textContent = currentKarteNo ? pad2(currentKarteNo) : "";
+    if (elName)    elName.textContent    = entry.name || "";
+    if (elGender)  elGender.textContent  = entry.sex  || "";
+    if (elAge)     elAge.textContent     = entry.age  || "";
+    if (elDis)     elDis.textContent     = entry.disability  || "";
+    if (elApp)     elApp.textContent     = entry.appearance  || "";
+    if (elPer)     elPer.textContent     = entry.personality || "";
+    if (elNotes)   elNotes.textContent   = entry.notes       || "";
+
+    // --- 「障害内容と等級／外見特徴／個性／備考」だけ 2秒長押しで書き換え可能 ---
+    function attachKaruLongPressEditor(el, fieldKey) {
+      if (!el) return;
+      let pressTimer = null;
+
+      function startPress() {
+        pressTimer = window.setTimeout(function () {
+          const current = el.textContent.trim();
+          const value = window.prompt("内容を入力してください", current);
+          if (value !== null) {
+            el.textContent = value;
+            if (!karudata[currentKey]) {
+              karudata[currentKey] = { no: currentKarteNo || 0, createdAt: Date.now() };
+            }
+            karudata[currentKey][fieldKey] = value;
+            saveKaruData();
+          }
+        }, 2000);
+      }
+
+      function cancelPress() {
+        if (pressTimer !== null) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+
+      el.addEventListener("mousedown", startPress);
+      el.addEventListener("mouseup", cancelPress);
+      el.addEventListener("mouseleave", cancelPress);
+
+      el.addEventListener("touchstart", function(e){
+        e.preventDefault();
+        startPress();
+      }, { passive:false });
+      el.addEventListener("touchend", cancelPress);
+      el.addEventListener("touchcancel", cancelPress);
+    }
+
+    attachKaruLongPressEditor(elDis,   "disability");
+    attachKaruLongPressEditor(elApp,   "appearance");
+    attachKaruLongPressEditor(elPer,   "personality");
+    attachKaruLongPressEditor(elNotes, "notes");
+
+    /* ★追加：性別を2秒押すごとに 男性→女性→不明 を繰り返し */
+    (function attachGenderCycle(){
+      if (!elGender) return;
+      const order = ["男性","女性","不明"];
+      let pressTimer = null;
+
+      function cycle(){
+        const cur = (karudata[currentKey] && karudata[currentKey].sex) ? String(karudata[currentKey].sex) : "不明";
+        const idx = order.indexOf(cur);
+        const next = order[(idx >= 0 ? idx + 1 : 0) % order.length];
+        if (!karudata[currentKey]) karudata[currentKey] = { no: currentKarteNo || 0, createdAt: Date.now() };
+        karudata[currentKey].sex = next;
+        saveKaruData();
+        elGender.textContent = next;
+      }
+
+      function startPress(){
+        pressTimer = window.setTimeout(function(){
+          pressTimer = null;
+          cycle();
+        }, 2000);
+      }
+      function cancelPress(){
+        if (pressTimer !== null){
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+
+      elGender.addEventListener("mousedown", startPress);
+      elGender.addEventListener("mouseup", cancelPress);
+      elGender.addEventListener("mouseleave", cancelPress);
+
+      elGender.addEventListener("touchstart", function(e){
+        e.preventDefault();
+        startPress();
+      }, { passive:false });
+      elGender.addEventListener("touchend", cancelPress);
+      elGender.addEventListener("touchcancel", cancelPress);
+    })();
+
+    /* ★追加：年齢を2秒押すと半角2文字（数字）を入力できる */
+    (function attachAgeEditor(){
+      if (!elAge) return;
+      let pressTimer = null;
+
+      function normalizeAge(raw){
+        if (raw == null) return null;
+        let s = String(raw);
+        s = s.replace(/[^\d]/g, "");
+        if (s.length === 0) return null;
+        if (s.length >= 2) s = s.slice(0, 2);
+        if (s.length === 1) s = "0" + s;  // 常に2文字にする
+        return s;
+      }
+
+      function edit(){
+        const cur = (karudata[currentKey] && karudata[currentKey].age != null) ? String(karudata[currentKey].age) : "";
+        const v = window.prompt("年齢（半角数字２文字）を入力してください", cur);
+        if (v === null) return;
+
+        const age2 = normalizeAge(v);
+        if (age2 === null){
+          return;
+        }
+        if (!karudata[currentKey]) karudata[currentKey] = { no: currentKarteNo || 0, createdAt: Date.now() };
+        karudata[currentKey].age = age2;
+        saveKaruData();
+        elAge.textContent = age2;
+      }
+
+      function startPress(){
+        pressTimer = window.setTimeout(function(){
+          pressTimer = null;
+          edit();
+        }, 2000);
+      }
+      function cancelPress(){
+        if (pressTimer !== null){
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+      }
+
+      elAge.addEventListener("mousedown", startPress);
+      elAge.addEventListener("mouseup", cancelPress);
+      elAge.addEventListener("mouseleave", cancelPress);
+
+      elAge.addEventListener("touchstart", function(e){
+        e.preventDefault();
+        startPress();
+      }, { passive:false });
+      elAge.addEventListener("touchend", cancelPress);
+      elAge.addEventListener("touchcancel", cancelPress);
+    })();
+
+    /* ==== ここから下は既存のメモ／画像処理（★ただし：アプリ時はURI保存） ==== */
+
+    // ---- 自由記録メモ（テキスト＋画像）の保存／復元 ----
+    const memoBox = document.getElementById("free-memo");
+    let lastRange = null;
+
+    if (memoBox) {
+      const savedMemo = localStorage.getItem(MEMO_STORAGE_KEY);
+      if (savedMemo !== null) memoBox.innerHTML = savedMemo;
+
+      function saveMemo() {
+        try { localStorage.setItem(MEMO_STORAGE_KEY, memoBox.innerHTML); } catch (e) {}
+      }
+
+      ["input", "blur", "keyup", "paste"].forEach(function (ev) {
+        memoBox.addEventListener(ev, function () {
+          saveMemo();
+          storeCurrentRange();
+        });
+      });
+
+      function storeCurrentRange() {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        if (!memoBox.contains(range.startContainer)) return;
+        lastRange = range;
+      }
+
+      ["keyup", "mouseup", "focus"].forEach(function (ev) {
+        memoBox.addEventListener(ev, storeCurrentRange);
+      });
+
+      function insertTextAtCursor(text) {
+        memoBox.focus();
+        const sel = window.getSelection();
+        if (lastRange) { sel.removeAllRanges(); sel.addRange(lastRange); }
+
+        let range = (sel.rangeCount > 0) ? sel.getRangeAt(0) : null;
+
+        if (!range || !memoBox.contains(range.startContainer)) {
+          range = document.createRange();
+          range.selectNodeContents(memoBox);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        storeCurrentRange();
+        saveMemo();
+      }
+
+      const datetimeBtn = document.getElementById("btn-datetime");
+      if (datetimeBtn) {
+        datetimeBtn.addEventListener("click", function () {
+          const now = new Date();
+          const y  = now.getFullYear();
+          const m  = ("0" + (now.getMonth() + 1)).slice(-2);
+          const d  = ("0" + now.getDate()).slice(-2);
+          const hh = ("0" + now.getHours()).slice(-2);
+          const mm = ("0" + now.getMinutes()).slice(-2);
+          const stamp = y + "年" + m + "月" + d + "日 " + hh + ":" + mm + " ";
+          insertTextAtCursor(stamp);
+        });
+      }
+
+      document.querySelectorAll("[data-insert-text]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          const text = btn.getAttribute("data-insert-text") || "";
+          if (!text) return;
+          insertTextAtCursor(text + " ");
+        });
+      });
+
+      function insertImageAtCursor(src, altText, uriText, nameText) {
+        memoBox.focus();
+        const sel = window.getSelection();
+        if (lastRange) { sel.removeAllRanges(); sel.addRange(lastRange); }
+
+        let range = (sel.rangeCount > 0) ? sel.getRangeAt(0) : null;
+
+        if (!range || !memoBox.contains(range.startContainer)) {
+          range = document.createRange();
+          range.selectNodeContents(memoBox);
+          range.collapse(false);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = altText || "";
+
+        // ★URIモードのときだけ属性に保存（複製データを持たない）
+        if (uriText) img.setAttribute("data-uri", uriText);
+        if (nameText) img.setAttribute("data-name", nameText);
+
+        range.insertNode(img);
+        range.setStartAfter(img);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        storeCurrentRange();
+        saveMemo();
+      }
+
+      const imageButton = document.getElementById("btn-image");
+      const imageInput  = document.getElementById("image-input");
+
+      if (imageButton && imageInput) {
+        imageButton.addEventListener("click", async function () {
+
+          // ★アプリ（WebView）なら：URIだけ保存
+          if (hasAppPicker()){
+            const picked = await appPickImage();
+            if (!picked || !picked.uri) return;
+            // 表示はそのままURIをimg.srcへ（WebView側が許可する前提）
+            insertImageAtCursor(picked.uri, picked.name || "image", picked.uri, picked.name || "");
+            return;
+          }
+
+          // ★従来（PC等）：DataURL
+          imageInput.value = "";
+          imageInput.click();
+        });
+
+        imageInput.addEventListener("change", function (e) {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (ev) {
+            insertImageAtCursor(ev.target.result, file.name || "image", "", "");
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      memoBox.addEventListener("mousedown", handleImagePressStart);
+      memoBox.addEventListener("mouseup", handleImagePressEnd);
+      memoBox.addEventListener("mouseleave", handleImagePressEnd);
+      memoBox.addEventListener("touchstart", function(e){
+        handleImagePressStart(e, true);
+      }, { passive:false });
+      memoBox.addEventListener("touchend", handleImagePressEnd);
+      memoBox.addEventListener("touchcancel", handleImagePressEnd);
+
+      let imgPressTimer = null;
+      let targetImg = null;
+
+      function handleImagePressStart(e, isTouch){
+        const target = e.target;
+        if (!(target && target.tagName === "IMG")) return;
+
+        if (isTouch) e.preventDefault();
+        targetImg = target;
+
+        imgPressTimer = window.setTimeout(function () {
+          if (targetImg && targetImg.parentNode) {
+            targetImg.parentNode.removeChild(targetImg);
+            saveMemo();
+          }
+          imgPressTimer = null;
+          targetImg = null;
+        }, 2000);
+      }
+
+      function handleImagePressEnd(){
+        if (imgPressTimer){
+          clearTimeout(imgPressTimer);
+          imgPressTimer = null;
+        }
+        targetImg = null;
+      }
+    }
+
+    // ---- 顔写真の長押し選択・保存（★アプリはURI保存／PCはDataURL互換） ----
+    const photoFrame = document.getElementById("photo-frame");
+    const photoInput = document.getElementById("photo-input");
+
+    function setFacePhotoBySrc(src, uriText, nameText) {
+      if (!photoFrame) return;
+      photoFrame.innerHTML = "";
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "顔写真";
+      if (uriText) img.setAttribute("data-uri", uriText);
+      if (nameText) img.setAttribute("data-name", nameText);
+      photoFrame.appendChild(img);
+    }
+
+    function saveFacePhotoURI(uri, name){
+      try { localStorage.setItem(PHOTO_URI_KEY, uri || ""); } catch(e){}
+      try { localStorage.setItem(PHOTO_NAME_KEY, name || ""); } catch(e){}
+      // 旧DataURLは残しても良いが、容量節約のため消す（互換維持しつつ新方式へ寄せる）
+      try { localStorage.removeItem(PHOTO_STORAGE_KEY); } catch(e){}
+    }
+
+    function saveFacePhotoDataUrl(dataUrl){
+      try { localStorage.setItem(PHOTO_STORAGE_KEY, dataUrl); } catch (e) {}
+      // 新URIキーは消さない（どちらかで復元できるように）
+    }
+
+    (function restoreFacePhoto() {
+      if (!photoFrame) return;
+
+      // ★新：URIがあれば優先
+      const uri = localStorage.getItem(PHOTO_URI_KEY);
+      const nm  = localStorage.getItem(PHOTO_NAME_KEY) || "";
+      if (uri){
+        setFacePhotoBySrc(uri, uri, nm);
+        return;
+      }
+
+      // ★旧：DataURL
+      const saved = localStorage.getItem(PHOTO_STORAGE_KEY);
+      if (saved) setFacePhotoBySrc(saved, "", "");
+    })();
+
+    if (photoFrame && photoInput) {
+      let facePressTimer = null;
+
+      function startFacePress() {
+        facePressTimer = window.setTimeout(async function () {
+          facePressTimer = null;
+
+          // ★アプリ（WebView）なら：URIだけ保存
+          if (hasAppPicker()){
+            const picked = await appPickImage();
+            if (!picked || !picked.uri) return;
+            saveFacePhotoURI(picked.uri, picked.name || "");
+            setFacePhotoBySrc(picked.uri, picked.uri, picked.name || "");
+            return;
+          }
+
+          // ★従来（PC等）：DataURL
+          photoInput.value = "";
+          photoInput.click();
+
+        }, 2000);
+      }
+
+      function cancelFacePress() {
+        if (facePressTimer !== null) {
+          clearTimeout(facePressTimer);
+          facePressTimer = null;
+        }
+      }
+
+      photoFrame.addEventListener("mousedown", startFacePress);
+      photoFrame.addEventListener("mouseup", cancelFacePress);
+      photoFrame.addEventListener("mouseleave", cancelFacePress);
+
+      photoFrame.addEventListener("touchstart", function (e) {
+        e.preventDefault();
+        startFacePress();
+      }, { passive: false });
+      photoFrame.addEventListener("touchend", cancelFacePress);
+      photoFrame.addEventListener("touchcancel", cancelFacePress);
+
+      photoInput.addEventListener("change", function (e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          saveFacePhotoDataUrl(ev.target.result);
+          setFacePhotoBySrc(ev.target.result, "", "");
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+</script>
+
+</body>
+</html>

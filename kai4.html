@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>介護福祉士 訓練｜認知症・障害</title>
+  <style>
+    :root{
+      --blue:#1e88e5; --bg:#eef6ff; --card:#fff; --txt:#0b1b2b; --muted:#4a5a6a; --border:#9cc7ff;
+      --blinkPink:#ff5aa5; --blinkBlue:#1f6fff;
+    }
+    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; background:var(--bg); color:var(--txt); }
+    .wrap{ max-width:900px; margin:0 auto; padding:14px; }
+    .bar{ background:#dcebff; border:2px solid var(--border); border-radius:14px; padding:12px; }
+    .title{ margin:0; font-size:18px; font-weight:900; }
+    .meta{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .card{ margin-top:12px; background:var(--card); border:2px solid var(--border); border-radius:14px; padding:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .qid{ font-weight:900; margin:0 0 8px; }
+    .qtext{ margin:0 0 10px; line-height:1.55; }
+    .opt{
+      padding:12px 12px;
+      border:2px solid #d5e8ff;
+      border-radius:12px;
+      margin:8px 0;
+      background:#fbfdff;
+      user-select:none;
+      cursor:pointer;
+      line-height:1.45;
+      font-weight:700;
+    }
+    .opt:active{ transform: translateY(1px); }
+    .opt .lead{ font-weight:900; margin-right:6px; }
+
+    .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:2px solid var(--blue); background:#fff; color:var(--blue);
+      padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.danger{ border-color:#d32f2f; color:#d32f2f; }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .progress{ margin-top:10px; height:10px; background:#dbeeff; border-radius:999px; overflow:hidden; border:1px solid #b8d8ff; }
+    .progress > div{ height:100%; width:0%; background:var(--blue); }
+
+    @keyframes blinkHalf { 0%{opacity:1;} 50%{opacity:.15;} 100%{opacity:1;} }
+    .blink-pink{ border-color:var(--blinkPink)!important; background:rgba(255,90,165,.14)!important; animation: blinkHalf 0.5s linear infinite; }
+    .blink-blue{ border-color:var(--blinkBlue)!important; background:rgba(31,111,255,.12)!important; animation: blinkHalf 0.5s linear infinite; }
+    .fast{ animation-duration: 0.25s !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <p class="title" id="genreTitle"></p>
+      <p class="meta" id="meta"></p>
+      <div class="progress"><div id="pbar"></div></div>
+    </div>
+
+    <div class="card">
+      <p class="qid" id="qid"></p>
+      <p class="qtext" id="qtext"></p>
+      <div id="opts"></div>
+
+      <div class="btns">
+        <button onclick="prev()">戻る</button>
+        <button class="primary" id="nextBtn" onclick="next()" disabled>次へ</button>
+        <button onclick="goHome()">表紙へ</button>
+        <button class="danger" onclick="resetThis()">このジャンルをリセット</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const GENRE_ID = 4;
+  const GENRE_TITLE = "ジャンル4（認知症・障害）";
+  const OFFSET = 300;
+
+  const questions = [{"text":"認知症の中核症状として適切なのはどれか。","choices":["幻覚","記憶障害","興奮","徘徊"],"answer":1},{"text":"BPSD（行動・心理症状）として適切なのはどれか。","choices":["失行","見当識障害","妄想","記憶障害"],"answer":2},{"text":"認知症の人への声掛けとして適切なのはどれか。","choices":["一度に多くの指示を出す","否定せず安心できる言葉で伝える","大声で叱る","急かして行動させる"],"answer":1},{"text":"回想法のねらいとして適切なのはどれか。","choices":["過去の失敗を責める","昔の体験を語り自尊感情を保つ","記憶を試すテストをする","現実を突きつける"],"answer":1},{"text":"視覚障害のある人への支援として適切なのはどれか。","choices":["黙って手を引く","周囲の状況を言葉で説明する","声をかけない","急いで歩かせる"],"answer":1},{"text":"聴覚障害のある人への配慮として適切なのはどれか。","choices":["口元が見える位置で話す","背後から話しかける","早口で話す","顔をそむけて話す"],"answer":0},{"text":"知的障害のある人への支援として適切なのはどれか。","choices":["複雑な説明を一度にする","短く具体的に伝える","冗談で混乱させる","説明は不要"],"answer":1},{"text":"精神障害のある人への基本姿勢として適切なのはどれか。","choices":["偏見を持って接する","安定した関係づくりと安全確保","無理に説得する","症状をからかう"],"answer":1},{"text":"発達障害の特性への配慮として適切なのはどれか。","choices":["環境調整と予測可能性を高める","急な予定変更を繰り返す","曖昧な指示を出す","叱責で矯正する"],"answer":0},{"text":"コミュニケーションで重要なのはどれか。","choices":["相手の反応を確認しながら伝える","一方的に話す","相手の訴えを否定する","沈黙は必ず避ける"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0},{"text":"認知症の支援で適切なのはどれか。","choices":["できないことだけに注目する","できることを生かし役割を持てるよう支援する","本人の訴えは無視する","環境を頻繁に変える"],"answer":1},{"text":"徘徊がみられる利用者への対応として適切なのはどれか。","choices":["力で押さえつける","目的や不安を推測し安全に見守る","外出を全面禁止する","叱ってやめさせる"],"answer":1},{"text":"食事を拒否する認知症の利用者への対応として適切なのはどれか。","choices":["無理やり口に入れる","原因（疲労・環境・体調）を確認し工夫する","一度拒否したら以後与えない","叱責する"],"answer":1},{"text":"不安が強い利用者への関わりとして適切なのはどれか。","choices":["不安を否定する","安心できる説明と見通しを伝える","放置する","急かす"],"answer":1},{"text":"失語がある利用者とのコミュニケーションで適切なのはどれか。","choices":["急いで結論を迫る","短い文と身振りで補う","大声で怒鳴る","話しかけない"],"answer":1},{"text":"失認がある利用者への配慮として適切なのはどれか。","choices":["環境の目印を工夫する","本人の努力不足と責める","照明を暗くする","物を頻繁に移動する"],"answer":0},{"text":"パニック状態の利用者への対応として適切なのはどれか。","choices":["刺激を減らし落ち着いて対応する","大勢で囲む","大声で指示する","急いで移動させる"],"answer":0},{"text":"家族支援として適切なのはどれか。","choices":["介護は家族の責任と突き放す","情報提供と相談対応で負担軽減を図る","家族の訴えは無視する","サービス利用を拒む"],"answer":1},{"text":"障害受容に配慮した支援として適切なのはどれか。","choices":["否定的感情を責める","気持ちを受け止め段階に応じ支援する","早く諦めさせる","話題にしない"],"answer":1},{"text":"合理的配慮として適切なのはどれか。","choices":["必要な支援を個別に調整する","全員同じ対応に限定する","支援要望を拒否する","障害を理由に利用を断る"],"answer":0}];
+
+  const K_PROGRESS = `kai_progress_g${GENRE_ID}`;
+  const K_ANSWERS  = `kai_answers_g${GENRE_ID}`;
+  const K_STREAK   = `kai_wrongstreak_g${GENRE_ID}`;
+  const K_UPDATED  = `kai_updated_g${GENRE_ID}`;
+
+  function fmt3(n){ return String(n).padStart(3,"0"); }
+  function fmt4(n){ return String(n).padStart(4,"0"); }
+
+  let idx = 0;
+  let answers = new Array(100).fill(null);
+  let wrongStreak = new Array(100).fill(0);
+
+  function loadState(){
+    const p = Number(localStorage.getItem(K_PROGRESS));
+    if (Number.isFinite(p) && p >= 0 && p < 100) idx = p;
+
+    const a = localStorage.getItem(K_ANSWERS);
+    if (a){ try { const x = JSON.parse(a); if (Array.isArray(x) && x.length === 100) answers = x; } catch(e){} }
+
+    const s = localStorage.getItem(K_STREAK);
+    if (s){ try { const x = JSON.parse(s); if (Array.isArray(x) && x.length === 100) wrongStreak = x; } catch(e){} }
+  }
+
+  function saveState(){
+    localStorage.setItem(K_PROGRESS, String(idx));
+    localStorage.setItem(K_ANSWERS, JSON.stringify(answers));
+    localStorage.setItem(K_STREAK, JSON.stringify(wrongStreak));
+    localStorage.setItem(K_UPDATED, new Date().toLocaleString("ja-JP"));
+  }
+
+  function render(){
+    document.getElementById("genreTitle").textContent = GENRE_TITLE;
+
+    const globalNo = OFFSET + idx + 1;
+    const withinNo = idx + 1;
+
+    document.getElementById("qid").textContent =
+      `通し番号 ${fmt4(globalNo)} ／ ジャンル内 ${fmt3(withinNo)}（苦情用ID）`;
+
+    document.getElementById("qtext").textContent = questions[idx].text;
+
+    const answeredCount = answers.filter(v => v !== null).length;
+    document.getElementById("meta").innerHTML =
+      `進捗：<b>${withinNo}</b> / 100　回答済み：<b>${answeredCount}</b> / 100　（連続ミス：<b>${wrongStreak[idx]}</b>）`;
+
+    document.getElementById("pbar").style.width = `${Math.round((withinNo/100)*100)}%`;
+
+    const box = document.getElementById("opts");
+    box.innerHTML = "";
+
+    const picked = answers[idx];
+    const ans = questions[idx].answer;
+    const judged = (picked !== null);
+
+    document.getElementById("nextBtn").disabled = !judged;
+
+    const speedUp = (wrongStreak[idx] >= 2);
+
+    questions[idx].choices.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "opt";
+      div.innerHTML = `<span class="lead">${["A","B","C","D"][i]}.</span>${c}`;
+
+      if (judged){
+        if (picked === ans && i === picked) {
+          div.classList.add("blink-pink");
+          if (speedUp) div.classList.add("fast");
+        }
+        if (picked !== ans && i === ans) {
+          div.classList.add("blink-blue");
+          if (speedUp) div.classList.add("fast");
+        }
+      }
+
+      div.addEventListener("click", () => {
+        const chosen = i;
+        const correct = (chosen === ans);
+
+        answers[idx] = chosen;
+
+        if (correct) {
+          wrongStreak[idx] = 0;
+        } else {
+          wrongStreak[idx] = (wrongStreak[idx] || 0) + 1;
+        }
+
+        saveState();
+        render();
+      });
+
+      box.appendChild(div);
+    });
+
+    saveState();
+  }
+
+  function next(){ if (idx < 99){ idx++; render(); } else { alert("このジャンルは最後まで到達しました。表紙へ戻れます。"); } }
+  function prev(){ if (idx > 0){ idx--; render(); } }
+  function goHome(){ saveState(); location.href = "kai_home.html"; }
+
+  function resetThis(){
+    if(!confirm("このジャンルの進捗・回答・連続ミスを削除します。よろしいですか？")) return;
+    localStorage.removeItem(K_PROGRESS);
+    localStorage.removeItem(K_ANSWERS);
+    localStorage.removeItem(K_STREAK);
+    localStorage.removeItem(K_UPDATED);
+    idx = 0;
+    answers = new Array(100).fill(null);
+    wrongStreak = new Array(100).fill(0);
+    render();
+  }
+
+  loadState();
+  render();
+</script>
+</body>
+</html>

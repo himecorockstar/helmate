@@ -1,0 +1,1036 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>利用者リスト</title>
+
+<style>
+:root{
+  --green:#16a34a;
+  --bg:#b6f3c7;
+
+  /* 竹物差し色 */
+  --bambooA: rgba(255,244,190,0.98);
+  --bambooB: rgba(255,236,160,0.96);
+  --bambooC: rgba(255,250,225,0.95);
+
+  --rulerLine: rgba(0,0,0,0.22);
+  --rulerLineMajor: rgba(0,0,0,0.35);
+  --rulerText: rgba(0,0,0,0.55);
+
+  /* ★太線用 */
+  --grid: rgba(22,163,74,0.85);
+  --grid-strong: rgba(22,163,74,0.95);
+  --grid-w: 3px;
+  --grid-w-strong: 4px;
+}
+
+html,body{
+  margin:0;
+  height:100%;
+  background:var(--bg);
+  font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans JP", sans-serif;
+}
+
+.outer{ padding:10px; box-sizing:border-box; }
+
+.card{
+  border:none;
+  border-radius:22px;
+  background:rgba(255,255,255,0.6);
+  padding:10px;
+}
+
+.title{
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  color:#064e3b;
+  margin-bottom:8px;
+}
+
+.note{
+  border:2px solid var(--green);
+  border-radius:16px;
+  background:#fff;
+  padding:10px 12px;
+  font-size:13px;
+  line-height:1.45;
+  margin-bottom:10px;
+  white-space:pre-wrap;
+}
+
+/* 右端にロードを置くためのコンテナ */
+.table-area{
+  display:flex;
+  gap:10px;
+  align-items:stretch;
+}
+
+/* 表示側（80%） */
+.table-wrap{
+  flex: 0 0 80%;
+  overflow-y:hidden;
+  border:2px solid var(--green);
+  border-radius:16px;
+  background:#fff;
+  height: 420px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: none;
+}
+
+/* スクロールロード（右端20%）：竹物差し */
+.scroll-rail{
+  flex: 0 0 20%;
+  border-radius:16px;
+  border:2px solid var(--green);
+  position:relative;
+  overflow:hidden;
+  user-select:none;
+  touch-action:none;
+  background:
+    linear-gradient(180deg, var(--bambooC), var(--bambooA) 35%, var(--bambooB) 100%);
+}
+.scroll-rail::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(120,80,0,0.06) 0px,
+      rgba(120,80,0,0.06) 10px,
+      rgba(0,0,0,0.00) 10px,
+      rgba(0,0,0,0.00) 22px
+    );
+  opacity:0.35;
+  pointer-events:none;
+}
+.ruler-title{
+  position:absolute;
+  top:6px;
+  left:0;
+  right:0;
+  text-align:center;
+  font-size:12px;
+  font-weight:900;
+  color:rgba(0,0,0,0.55);
+  letter-spacing:0.12em;
+  pointer-events:none;
+}
+.ruler{
+  position:absolute;
+  left:10px;
+  right:10px;
+  top:26px;
+  bottom:10px;
+  pointer-events:none;
+}
+.ruler .edge{
+  position:absolute;
+  top:0; bottom:0;
+  width:1px;
+  background: rgba(0,0,0,0.18);
+}
+.ruler .edge.left{ left:0; }
+.ruler .edge.right{ right:0; }
+.ruler .minor{
+  position:absolute;
+  left:0;
+  width:14px;
+  height:1px;
+  background: rgba(0,0,0,0.55);
+}
+.ruler .tick{
+  position:absolute;
+  left:0;
+  right:0;
+  height:2px;
+  background: var(--rulerLineMajor);
+  opacity:0.75;
+}
+.ruler .label{
+  position:absolute;
+  right:0;
+  transform:translateY(-50%);
+  font-size:11px;
+  font-weight:900;
+  color: var(--rulerText);
+  background: rgba(255,255,255,0.65);
+  padding:1px 4px;
+  border-radius:6px;
+  border:1px solid rgba(0,0,0,0.06);
+}
+.pos-arrow{
+  position:absolute;
+  left:6px;
+  top:30px;
+  transform:translateY(-50%);
+  width:0;
+  height:0;
+  border-top:7px solid transparent;
+  border-bottom:7px solid transparent;
+  border-left:12px solid #ef4444;
+  pointer-events:none;
+}
+.pos-window{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  width:72%;
+  height:42px;
+  border-radius:10px;
+  border:2px solid rgba(0,0,0,0.25);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.75), rgba(230,230,230,0.55));
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.pos-window span{
+  font-weight:1000;
+  font-size:20px;
+  letter-spacing:0.08em;
+  color:rgba(0,0,0,0.65);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ====== ★表：線を太く ====== */
+table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+th,td{
+  border: var(--grid-w) solid var(--grid);
+  padding:4px;
+  text-align:center;
+  vertical-align:middle;
+  font-size:13px;
+}
+
+/* ★ヘッダ長押しで画像メニュー等が出ないように（番号／氏名） */
+thead th{
+  position:sticky;
+  top:0;
+  background:#dcfce7;
+  z-index:1;
+  border-bottom: var(--grid-w-strong) solid var(--grid-strong);
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-user-drag:none;
+  touch-action:none;
+}
+
+/* 列構成：番号/顔写真/氏名よみがな */
+.col-no   { width:4ch; }
+.col-photo{ width:74px; }
+.col-name { width:auto; }
+
+.cell-photo{ padding:0; }
+
+.photo-box{
+  width:100%;
+  height:80px;
+  background:#eee;
+  overflow:hidden;
+  margin:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+}
+.photo-box img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+/* ★画像の長押しプレビュー／操作メニュー対策（写真枠だけ） */
+.photo-box, .photo-box *{
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+}
+
+/* ====== ★当たり判定を上下半分いっぱいにする（氏名2段） ====== */
+.twolines{
+  padding:0 !important;
+  height:80px;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+}
+.twolines .line{
+  flex:1;
+  display:flex;
+  align-items:center;
+  padding:0 6px;
+  text-align:left;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:clip;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+.twolines .line + .line{
+  border-top: var(--grid-w) solid var(--grid);
+}
+
+/* ボタン */
+.buttons{
+  margin-top:10px;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+.btn{
+  padding:10px 16px;
+  border-radius:16px;
+  border:3px solid #2563eb;
+  font-weight:800;
+  background:#fff;
+  user-select:none;
+}
+.btn.primary{ background:#2563eb; color:#fff; }
+.btn.danger{ background:#ef4444; border-color:#7f1d1d; color:#fff; }
+
+/* 選択色：行の左端〜右端まで全部 */
+.row-selected td{ background:#fde68a; }
+
+/* 押し中フィードバック（0.3秒で点灯） */
+.lp-arming{ background: rgba(59,130,246,0.12) !important; }
+</style>
+</head>
+
+<body>
+<div class="outer">
+  <div class="card">
+
+    <div class="title">利用者リスト</div>
+
+    <div class="note">氏名・よみがなを入力して下さい。写真は自由です。表示したいカルテの番号をタップし色が変わったら「カルテ選択」をタップして下さい。色が変わったまま「削除(５秒)」を押すとその番号は空欄になりデータは消えます。「番号」か「よみがな」を２秒押すとそれぞれ並び替えが出来ます。
+
+</div>
+
+    <div class="table-area">
+      <div class="table-wrap" id="tableWrap">
+        <table id="userTable">
+          <thead>
+            <tr>
+              <th class="col-no" id="thNo">番号</th>
+              <th class="col-photo">顔写真</th>
+              <th class="col-name" id="thName">氏名／よみがな</th>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </div>
+
+      <div class="scroll-rail" id="scrollRail" aria-label="位置（スクロール）">
+        <div class="ruler-title">位置</div>
+
+        <div class="ruler" id="ruler">
+          <div class="edge left"></div>
+          <div class="edge right"></div>
+        </div>
+
+        <div class="pos-arrow" id="posArrow" title="現在位置"></div>
+        <div class="pos-window" aria-hidden="true"><span id="posNum">01</span></div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <!-- ★ID追加：カルテ選択 -->
+      <div class="btn primary" id="btnSelect">カルテ選択</div>
+      <div class="btn danger" id="btnDelete">削除（5秒）</div>
+      <div class="btn" id="btnBack">戻る</div>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+/* ========== ★戻る → index.html ========== */
+(function(){
+  const b = document.getElementById('btnBack');
+  if(!b) return;
+  b.addEventListener('click', ()=>{
+    location.href = 'index.html';
+  }, false);
+})();
+
+/* ========== ★カルテ選択：選択中番号のデータをDBから読んで karu.html へ渡す ========== */
+/*
+  karu.html側で読む想定キー：
+    const x = JSON.parse(sessionStorage.getItem('karu_selected'));
+    // x.id  -> カルテ番号枠に表示
+    // x.name -> 氏名枠に「氏名 よみがな」で表示
+*/
+async function selectAndOpenKaru(){
+  if(!selectedId){
+    alert('番号を選択してください。');
+    return;
+  }
+  const db = await openDB();
+  const rec = await dbGet(db, selectedId) || { id:selectedId, name1:'', name2:'' };
+
+  const name = `${(rec.name1||'').trim()} ${(rec.name2||'').trim()}`.trim();
+
+  sessionStorage.setItem('karu_selected', JSON.stringify({
+    id: selectedId,
+    name: name
+  }));
+
+  location.href = 'karu.html';
+}
+
+(function(){
+  const btn = document.getElementById('btnSelect');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>{
+    selectAndOpenKaru().catch(err=>{
+      console.error(err);
+      alert('カルテ選択でエラーが発生しました。');
+    });
+  }, false);
+})();
+
+/* ========== 画像プレビュー/操作メニュー対策（写真枠だけ） ========== */
+(function blockImageMenu(){
+  const blockIfInPhotoBox = (e)=>{
+    const t = e.target;
+    if(t && t.closest && t.closest('.photo-box')){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+  document.addEventListener('contextmenu', blockIfInPhotoBox, true);
+  document.addEventListener('dragstart',  blockIfInPhotoBox, true);
+})();
+
+/* ★番号／氏名ヘッダ：長押しで画像メニュー等が出ないように強制ブロック */
+(function blockHeaderMenu(){
+  const block = (e)=>{
+    const t = e.target;
+    if(t && (t.id === 'thNo' || t.id === 'thName' || (t.closest && t.closest('#thNo,#thName')))){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+  document.addEventListener('contextmenu', block, true);
+  document.addEventListener('selectstart', block, true);
+  document.addEventListener('dragstart', block, true);
+})();
+
+/* ========== 保存：IndexedDB（name1/name2/imgUri/imgName/互換img） ========== */
+const DB_NAME = 'helmate_db';
+const DB_VER  = 1;
+const STORE   = 'patients';
+
+function openDB(){
+  return new Promise((resolve, reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = ()=>{
+      const db = req.result;
+      if(!db.objectStoreNames.contains(STORE)){
+        db.createObjectStore(STORE, { keyPath:'id' });
+      }
+    };
+    req.onsuccess = ()=>resolve(req.result);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+function txStore(db, mode='readonly'){
+  return db.transaction(STORE, mode).objectStore(STORE);
+}
+function dbGetAll(db){
+  return new Promise((resolve, reject)=>{
+    const req = txStore(db,'readonly').getAll();
+    req.onsuccess = ()=>resolve(req.result || []);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+function dbPut(db, record){
+  return new Promise((resolve, reject)=>{
+    const req = txStore(db,'readwrite').put(record);
+    req.onsuccess = ()=>resolve(true);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+/* ★追加：1件取得（カルテ選択で使う） */
+function dbGet(db, id){
+  return new Promise((resolve, reject)=>{
+    const req = txStore(db,'readonly').get(id);
+    req.onsuccess = ()=>resolve(req.result || null);
+    req.onerror = ()=>reject(req.error);
+  });
+}
+
+/* ========== 共通：1.5秒ルール（感知を甘く） ========== */
+let longPressLockUntil = 0;
+let swallowNextClick = false;
+
+(function installClickGuard(){
+  document.addEventListener('click', (e)=>{
+    if(!swallowNextClick) return;
+    swallowNextClick = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+})();
+
+function attachLongPress2s(el, fn){
+  const HOLD_MS = 1500;
+  const ARM_MS  = 300;
+
+  let t = null;
+  let armT = null;
+  let pid = null;
+  let armed = false;
+
+  const disarm = ()=>{
+    if(armT){ clearTimeout(armT); armT = null; }
+    if(armed){
+      armed = false;
+      el.classList.remove('lp-arming');
+    }
+  };
+
+  const end = ()=>{
+    if(t){ clearTimeout(t); t = null; }
+    disarm();
+    if(pid != null){
+      try{ el.releasePointerCapture(pid); }catch(_){}
+    }
+    pid = null;
+  };
+
+  el.addEventListener('pointerdown', (e)=>{
+    if(Date.now() < longPressLockUntil) return;
+    e.stopPropagation();
+
+    pid = e.pointerId;
+    try{ el.setPointerCapture(pid); }catch(_){}
+
+    disarm();
+    armT = setTimeout(()=>{
+      armT = null;
+      armed = true;
+      el.classList.add('lp-arming');
+      if(navigator.vibrate){
+        try{ navigator.vibrate(15); }catch(_){}
+      }
+    }, ARM_MS);
+
+    if(t) clearTimeout(t);
+    t = setTimeout(()=>{
+      t = null;
+      disarm();
+
+      swallowNextClick = true;
+      longPressLockUntil = Date.now() + 450;
+
+      fn();
+    }, HOLD_MS);
+
+  }, {passive:true});
+
+  el.addEventListener('pointerup', end, {passive:true});
+  el.addEventListener('pointercancel', end, {passive:true});
+  el.addEventListener('lostpointercapture', end, {passive:true});
+}
+
+/* ========== ★追加：番号セルは「押したらすぐ選択」 ========== */
+function attachTapSelect(el, fn){
+  el.addEventListener('pointerdown', (e)=>{
+    if(Date.now() < longPressLockUntil) return;
+    // 画面スクロールや余計なフォーカスを避ける
+    e.preventDefault();
+    e.stopPropagation();
+    fn();
+  }, {passive:false});
+}
+
+/* ========== 画面構築（01〜99） ========== */
+const TOTAL = 99;
+function pad2(n){ return String(n).padStart(2,'0'); }
+
+let selectedId = null;
+let selectedTr = null;
+function clearSelection(){
+  if(selectedTr) selectedTr.classList.remove('row-selected');
+  selectedId = null;
+  selectedTr = null;
+}
+
+/* ========== 並び替え状態 ========== */
+let sortMode = null;          // null | 'no' | 'name'
+let sortAscNo = true;         // true:昇順 / false:降順
+let sortAscName = true;       // true:昇順 / false:降順
+let viewCount = TOTAL;        // 画面上に並ぶ行数（フィルタ時に変動）
+
+/* ========== 竹物差し：短い線50本＋20/40/60/80/100 ========== */
+function buildRuler(){
+  const ruler = document.getElementById('ruler');
+  if(!ruler) return;
+
+  [...ruler.querySelectorAll('.minor,.tick,.label')].forEach(el=>el.remove());
+
+  const minorCount = 50;
+  for(let i=0;i<minorCount;i++){
+    const p = (minorCount === 1) ? 0 : (i/(minorCount-1));
+    const m = document.createElement('div');
+    m.className = 'minor';
+    m.style.top = (p*100) + '%';
+    ruler.appendChild(m);
+  }
+
+  const marks = [20,40,60,80,100];
+  for(const v of marks){
+    const p = v / 100;
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.top = (p*100) + '%';
+    ruler.appendChild(tick);
+
+    const lab = document.createElement('div');
+    lab.className = 'label';
+    lab.textContent = String(v);
+    lab.style.top = (p*100) + '%';
+    ruler.appendChild(lab);
+  }
+}
+
+/* ========== ロード操作：ドラッグスクロール + 矢印追従 + 窓に番号 ========== */
+function setupRulerScroll(wrap, rail, arrow, numEl){
+  function laneInner(){
+    const rr = rail.getBoundingClientRect();
+    const titleH = 26;
+    const pad = 10;
+    const top = rr.top + titleH + pad;
+    const bottom = rr.bottom - pad;
+    return { top, bottom, height: Math.max(1, bottom - top) };
+  }
+
+  function updateIndicator(){
+    const max = wrap.scrollHeight - wrap.clientHeight;
+    const ratio = (max > 0) ? (wrap.scrollTop / max) : 0;
+
+    const inner = laneInner();
+    const y = inner.top + ratio * inner.height;
+
+    const railTop = rail.getBoundingClientRect().top;
+    arrow.style.top = (y - railTop) + 'px';
+
+    const c = Math.max(1, viewCount);
+    const approx = Math.round(ratio * (c - 1)) + 1;
+    numEl.textContent = pad2(Math.min(TOTAL, Math.max(1, approx)));
+  }
+
+  wrap.addEventListener('scroll', ()=>{
+    requestAnimationFrame(updateIndicator);
+  }, {passive:true});
+
+  window.addEventListener('resize', ()=>{
+    buildRuler();
+    updateIndicator();
+  }, {passive:true});
+
+  let dragging = false;
+
+  function setScrollFromClientY(clientY){
+    const max = wrap.scrollHeight - wrap.clientHeight;
+    if(max <= 0) return;
+
+    const inner = laneInner();
+    const y = Math.min(inner.bottom, Math.max(inner.top, clientY));
+    const ratio = (y - inner.top) / inner.height;
+
+    wrap.scrollTop = ratio * max;
+    updateIndicator();
+  }
+
+  rail.addEventListener('pointerdown', (e)=>{
+    e.preventDefault();
+    rail.setPointerCapture(e.pointerId);
+    dragging = true;
+    setScrollFromClientY(e.clientY);
+  }, {passive:false});
+
+  rail.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    e.preventDefault();
+    setScrollFromClientY(e.clientY);
+  }, {passive:false});
+
+  ['pointerup','pointercancel','pointerleave','pointerout'].forEach(ev=>{
+    rail.addEventListener(ev, (e)=>{
+      dragging = false;
+      try{ rail.releasePointerCapture(e.pointerId); }catch(_){}
+    }, {passive:true});
+  });
+
+  buildRuler();
+  updateIndicator();
+  return updateIndicator;
+}
+
+/* ========== データ → 表示順生成（フィルタ：氏名/よみがな どちらかに文字がある行だけ） ========== */
+function hasAnyName(rec){
+  const a = (rec && rec.name1) ? String(rec.name1).trim() : '';
+  const b = (rec && rec.name2) ? String(rec.name2).trim() : '';
+  return (a.length > 0) || (b.length > 0);
+}
+
+function kanaKey(rec){
+  const b = (rec && rec.name2) ? String(rec.name2).trim() : '';
+  const a = (rec && rec.name1) ? String(rec.name1).trim() : '';
+  return (b || a || '');
+}
+
+function makeOrder(map){
+  // 通常：01〜99固定
+  if(!sortMode){
+    const ids = [];
+    for(let i=1;i<=TOTAL;i++) ids.push(pad2(i));
+    return ids;
+  }
+
+  // ソート時：名前が入っている行のみ
+  const ids = [];
+  for(let i=1;i<=TOTAL;i++){
+    const id = pad2(i);
+    const rec = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+    if(hasAnyName(rec)) ids.push(id);
+  }
+
+  if(sortMode === 'no'){
+    ids.sort((x,y)=>{
+      const a = parseInt(x,10);
+      const b = parseInt(y,10);
+      return sortAscNo ? (a-b) : (b-a);
+    });
+    return ids;
+  }
+
+  if(sortMode === 'name'){
+    ids.sort((x,y)=>{
+      const ax = kanaKey(map[x] || {id:x});
+      const ay = kanaKey(map[y] || {id:y});
+      const cmp = ax.localeCompare(ay, 'ja');
+      return sortAscName ? cmp : -cmp;
+    });
+    return ids;
+  }
+
+  return ids;
+}
+
+/* ========== ★アプリ箱（WebView）向け：画像URIを選ばせる（存在しない時はブラウザ方式へ） ========== */
+function hasAppImagePicker(){
+  // 例：Android側が window.HelmateAndroid.pickImageJSON() を生やす
+  // 戻り値：'{"uri":"content://...","name":"IMG_1234.jpg"}'
+  return (window.HelmateAndroid && typeof window.HelmateAndroid.pickImageJSON === 'function');
+}
+
+async function pickImageFromApp(){
+  try{
+    const s = window.HelmateAndroid.pickImageJSON();
+    if(!s) return null;
+    const o = JSON.parse(String(s));
+    if(!o || !o.uri) return null;
+    return { uri:String(o.uri), name: (o.name ? String(o.name) : '') };
+  }catch(e){
+    console.error(e);
+    return null;
+  }
+}
+
+/* ========== 表描画（再描画しても機能が壊れないように、ここで全部バインド） ========== */
+function renderTable(orderIds, map, db, refresh){
+  const tbody = document.getElementById('listBody');
+  tbody.textContent = '';
+
+  const frag = document.createDocumentFragment();
+
+  for(const id of orderIds){
+    const r = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+
+    // 表示優先：URI → 互換img(DataURL)
+    const showSrc = (r.imgUri && String(r.imgUri).trim()) ? r.imgUri : (r.img || '');
+
+    const tr = document.createElement('tr');
+    tr.dataset.id = id;
+
+    tr.innerHTML = `
+      <td class="fixed-cell no-cell" data-id="${id}">${id}</td>
+      <td class="cell-photo editable-cell">
+        <div class="photo-box" data-id="${id}">
+          ${showSrc ? `<img src="${showSrc}" alt="" draggable="false">` : ``}
+        </div>
+      </td>
+      <td class="twolines editable-cell name-cell" data-id="${id}">
+        <div class="line" data-field="name1">${r.name1 || ''}</div>
+        <div class="line" data-field="name2">${r.name2 || ''}</div>
+      </td>
+    `;
+
+    if(selectedId === id){
+      selectedTr = tr;
+      tr.classList.add('row-selected');
+    }
+
+    frag.appendChild(tr);
+  }
+
+  tbody.appendChild(frag);
+
+  // 表示行数（ロード窓の数字用）
+  viewCount = Math.max(1, orderIds.length);
+
+  // 1) 番号セル：タップで即選択（★変更）
+  document.querySelectorAll('.no-cell').forEach(td=>{
+    attachTapSelect(td, ()=>{
+      const tr = td.closest('tr');
+      const id = tr.dataset.id;
+
+      if(selectedId === id){
+        clearSelection();
+        return;
+      }
+      clearSelection();
+      selectedId = id;
+      selectedTr = tr;
+      tr.classList.add('row-selected');
+    });
+  });
+
+  // 2) 氏名／よみがな：長押しで入力（押してる間は色が変わる：lp-arming）
+  document.querySelectorAll('.name-cell .line').forEach(line=>{
+    attachLongPress2s(line, async ()=>{
+      const tr = line.closest('tr');
+      const id = tr.dataset.id;
+      const field = line.dataset.field;
+
+      const cur = line.textContent || '';
+      const label = (field === 'name1') ? '氏名（上段）' : 'よみがな（下段）';
+      const val = prompt(label, cur);
+      if(val === null) return;
+
+      const rec = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+      rec[field] = String(val);
+      map[id] = rec;
+      await dbPut(db, rec);
+
+      line.textContent = rec[field];
+
+      // ソート表示中なら再ソートして追従（表示行のみルール）
+      if(sortMode){
+        const ord = makeOrder(map);
+        renderTable(ord, map, db, refresh);
+        const wrap = document.getElementById('tableWrap');
+        wrap.scrollTop = 0;
+        refresh();
+      }
+    });
+  });
+
+  // 3) 写真：長押しで貼り付け
+  //    アプリ箱があれば URIだけ保存（軽量）
+  //    ブラウザなら従来通り 80*80 DataURL を保存（互換）
+  document.querySelectorAll('.photo-box').forEach(box=>{
+    const id = box.dataset.id;
+
+    attachLongPress2s(box, async ()=>{
+      // --- アプリ箱（URI方式） ---
+      if(hasAppImagePicker()){
+        const picked = await pickImageFromApp();
+        if(!picked) return;
+
+        const rec = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+        rec.imgUri = picked.uri;
+        rec.imgName = picked.name || '';
+        // 互換imgは空にして軽量化
+        rec.img = '';
+        map[id] = rec;
+        await dbPut(db, rec);
+
+        box.innerHTML = `<img src="${rec.imgUri}" alt="" draggable="false">`;
+        return;
+      }
+
+      // --- ブラウザ（従来方式：80*80にしてDataURL保存） ---
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'image/*';
+
+      inp.onchange = ()=>{
+        const f = inp.files && inp.files[0];
+        if(!f) return;
+
+        const img = new Image();
+        img.onload = async ()=>{
+          const c = document.createElement('canvas');
+          c.width = c.height = 80;
+          c.getContext('2d').drawImage(img, 0, 0, 80, 80);
+          const data = c.toDataURL('image/jpeg', 0.85);
+
+          const rec = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+          rec.img = data;
+          rec.imgUri = '';
+          rec.imgName = (f && f.name) ? String(f.name) : '';
+          map[id] = rec;
+          await dbPut(db, rec);
+
+          box.innerHTML = `<img src="${data}" alt="" draggable="false">`;
+        };
+        img.src = URL.createObjectURL(f);
+      };
+
+      inp.click();
+    });
+  });
+}
+
+/* ========== 初期化 ========== */
+(async function init(){
+  const db = await openDB();
+  const all = await dbGetAll(db);
+  const map = {};
+  for(const r of all){ map[r.id] = r; }
+
+  const wrap  = document.getElementById('tableWrap');
+  const rail  = document.getElementById('scrollRail');
+  const arrow = document.getElementById('posArrow');
+  const numEl = document.getElementById('posNum');
+
+  const refresh = setupRulerScroll(wrap, rail, arrow, numEl);
+
+  // 初期描画（通常：01〜99）
+  let orderIds = makeOrder(map);
+  renderTable(orderIds, map, db, refresh);
+  wrap.scrollTop = 0;
+  refresh();
+
+  // 並び替え：番号（1.5秒押しで昇降順トグル。表示は“文字がある行のみ”）
+  const thNo = document.getElementById('thNo');
+  attachLongPress2s(thNo, ()=>{
+    sortMode = 'no';
+    sortAscNo = !sortAscNo;
+
+    clearSelection();
+
+    const ord = makeOrder(map);
+    renderTable(ord, map, db, refresh);
+    wrap.scrollTop = 0;
+    refresh();
+  });
+
+  // 並び替え：氏名／よみがな（下段ひらがな優先キーで昇降順トグル。表示は“文字がある行のみ”）
+  const thName = document.getElementById('thName');
+  attachLongPress2s(thName, ()=>{
+    sortMode = 'name';
+    sortAscName = !sortAscName;
+
+    clearSelection();
+
+    const ord = makeOrder(map);
+    renderTable(ord, map, db, refresh);
+    wrap.scrollTop = 0;
+    refresh();
+  });
+
+  // 削除（5秒）
+  const btnDelete = document.getElementById('btnDelete');
+  let delTimer = null;
+
+  btnDelete.addEventListener('pointerdown', ()=>{
+    if(delTimer) clearTimeout(delTimer);
+    delTimer = setTimeout(async ()=>{
+      delTimer = null;
+      if(!selectedId) return;
+
+      const id = selectedId;
+      const rec = map[id] || { id, img:'', imgUri:'', imgName:'', name1:'', name2:'' };
+      rec.img = '';
+      rec.imgUri = '';
+      rec.imgName = '';
+      rec.name1 = '';
+      rec.name2 = '';
+      map[id] = rec;
+      await dbPut(db, rec);
+
+      // 画面反映
+      if(sortMode){
+        const ord = makeOrder(map);
+        renderTable(ord, map, db, refresh);
+        wrap.scrollTop = 0;
+        refresh();
+      }else{
+        // 通常表示なら該当行だけ消す
+        const tr = document.querySelector(`tr[data-id="${id}"]`);
+        if(tr){
+          const photo = tr.querySelector('.photo-box');
+          if(photo) photo.innerHTML = '';
+          tr.querySelectorAll('.name-cell .line').forEach(l=>l.textContent='');
+        }
+        refresh();
+      }
+
+      clearSelection();
+    }, 5000);
+  }, {passive:true});
+
+  ['pointerup','pointerleave','pointercancel','pointerout'].forEach(ev=>{
+    btnDelete.addEventListener(ev, ()=>{
+      if(delTimer){ clearTimeout(delTimer); delTimer = null; }
+    }, {passive:true});
+  });
+
+})();
+
+/* ========== ★このファイル末尾のまま：他機能は変更なし ========== */
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

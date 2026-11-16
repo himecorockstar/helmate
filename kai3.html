@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>介護福祉士 訓練｜こころとからだ</title>
+  <style>
+    :root{
+      --blue:#1e88e5; --bg:#eef6ff; --card:#fff; --txt:#0b1b2b; --muted:#4a5a6a; --border:#9cc7ff;
+      --blinkPink:#ff5aa5; --blinkBlue:#1f6fff;
+    }
+    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; background:var(--bg); color:var(--txt); }
+    .wrap{ max-width:900px; margin:0 auto; padding:14px; }
+    .bar{ background:#dcebff; border:2px solid var(--border); border-radius:14px; padding:12px; }
+    .title{ margin:0; font-size:18px; font-weight:900; }
+    .meta{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .card{ margin-top:12px; background:var(--card); border:2px solid var(--border); border-radius:14px; padding:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .qid{ font-weight:900; margin:0 0 8px; }
+    .qtext{ margin:0 0 10px; line-height:1.55; }
+    .opt{
+      padding:12px 12px;
+      border:2px solid #d5e8ff;
+      border-radius:12px;
+      margin:8px 0;
+      background:#fbfdff;
+      user-select:none;
+      cursor:pointer;
+      line-height:1.45;
+      font-weight:700;
+    }
+    .opt:active{ transform: translateY(1px); }
+    .opt .lead{ font-weight:900; margin-right:6px; }
+
+    .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:2px solid var(--blue); background:#fff; color:var(--blue);
+      padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.danger{ border-color:#d32f2f; color:#d32f2f; }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .progress{ margin-top:10px; height:10px; background:#dbeeff; border-radius:999px; overflow:hidden; border:1px solid #b8d8ff; }
+    .progress > div{ height:100%; width:0%; background:var(--blue); }
+
+    @keyframes blinkHalf { 0%{opacity:1;} 50%{opacity:.15;} 100%{opacity:1;} }
+    .blink-pink{ border-color:var(--blinkPink)!important; background:rgba(255,90,165,.14)!important; animation: blinkHalf 0.5s linear infinite; }
+    .blink-blue{ border-color:var(--blinkBlue)!important; background:rgba(31,111,255,.12)!important; animation: blinkHalf 0.5s linear infinite; }
+    .fast{ animation-duration: 0.25s !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <p class="title" id="genreTitle"></p>
+      <p class="meta" id="meta"></p>
+      <div class="progress"><div id="pbar"></div></div>
+    </div>
+
+    <div class="card">
+      <p class="qid" id="qid"></p>
+      <p class="qtext" id="qtext"></p>
+      <div id="opts"></div>
+
+      <div class="btns">
+        <button onclick="prev()">戻る</button>
+        <button class="primary" id="nextBtn" onclick="next()" disabled>次へ</button>
+        <button onclick="goHome()">表紙へ</button>
+        <button class="danger" onclick="resetThis()">このジャンルをリセット</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const GENRE_ID = 3;
+  const GENRE_TITLE = "ジャンル3（こころとからだ）";
+  const OFFSET = 200;
+
+  const questions = [{"text":"バイタルサインについて適切なのはどれか。","choices":["顔色が悪くても記録しない","体温・脈拍・呼吸・血圧などの変化を観察する","測定は医師だけが行うので介護職は不要","異常があっても次の勤務者に任せる"],"answer":1},{"text":"脱水について適切なのはどれか。","choices":["水分摂取を控える","口渇・尿量減少・皮膚乾燥などが手がかり","汗をかくほど良い","高齢者は脱水にならない"],"answer":1},{"text":"便秘について適切なのはどれか。","choices":["活動量低下や水分不足も要因","下剤は必ず毎日増量する","排便は2週間なくても正常","食物繊維は不要"],"answer":0},{"text":"睡眠について適切なのはどれか。","choices":["高齢者は必ず長時間眠れる","高齢者は中途覚醒が増えやすい","昼夜逆転は放置してよい","睡眠薬は介護職が判断して増減する"],"answer":1},{"text":"疼痛について適切なのはどれか。","choices":["痛みは本人が言わなければ無い","痛みは表情や動作の変化から推測できる","痛みは気合で止まる","痛みがあっても体位変換しない"],"answer":1},{"text":"呼吸について適切なのはどれか。","choices":["呼吸困難でも様子を見る","呼吸困難は早期に報告し対応する","呼吸数は重要でない","息苦しさは甘えである"],"answer":1},{"text":"循環について適切なのはどれか。","choices":["急に立ち上がらせる","起立性低血圧では立ち上がりをゆっくりにする","めまいは無視する","転倒してから対策する"],"answer":1},{"text":"感染について適切なのはどれか。","choices":["発熱は高齢者には起きない","発熱や咳などの変化を観察し報告する","マスクは不要","手指衛生は一日一回でよい"],"answer":1},{"text":"栄養について適切なのはどれか。","choices":["低栄養は筋力低下や褥瘡リスクを高める","体重減少は良い兆候","タンパク質は不要","食事は一日一回で良い"],"answer":0},{"text":"感覚について適切なのはどれか。","choices":["加齢で視力・聴力が低下しやすい","大声で怒鳴るのが良い","見えないなら諦める","補聴器や眼鏡は危険なので外す"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0},{"text":"糖尿病のある利用者の観察で重要なのはどれか。","choices":["低血糖症状（冷汗・ふるえ等）を観察する","甘い飲料を常に勧める","足の傷は放置する","食事療法は不要"],"answer":0},{"text":"高血圧のある利用者への配慮として適切なのはどれか。","choices":["急に立ち上がらせる","塩分を摂らせる","血圧変動や頭痛などの訴えを観察する","服薬は自己判断で中止させる"],"answer":2},{"text":"脳卒中後の片麻痺がある利用者への関わりとして適切なのはどれか。","choices":["麻痺側は使わないようにする","残存機能を生かし安全に活動を促す","声掛けは不要","麻痺側を強く引っ張る"],"answer":1},{"text":"骨折後の利用者の観察で適切なのはどれか。","choices":["痛みや腫れ、可動域を観察する","痛みは無視する","安静なので体位変換しない","食事は不要"],"answer":0},{"text":"誤嚥性肺炎の兆候として注意するのはどれか。","choices":["発熱や咳、痰の増加","爪が伸びる","便が硬い","目がかゆい"],"answer":0},{"text":"うつ状態の可能性がある利用者への対応として適切なのはどれか。","choices":["気合が足りないと叱る","傾聴し必要に応じて専門職へつなぐ","放置してよい","睡眠を妨げるように起こす"],"answer":1},{"text":"せん妄の特徴として適切なのはどれか。","choices":["ゆっくり進行し固定する","急に起こり日内変動がある","本人の性格の問題である","治療は不要"],"answer":1},{"text":"嚥下機能低下が疑われるときの対応として適切なのはどれか。","choices":["固形物を急いで食べさせる","姿勢や食形態を調整し専門職へ相談する","むせは気にしない","水分を増やすため一気飲みさせる"],"answer":1},{"text":"皮膚トラブルの予防として適切なのはどれか。","choices":["清潔保持と保湿、観察を行う","発赤は強くこする","オムツ内は常に湿らせる","痒みは放置する"],"answer":0},{"text":"排尿の観察で報告が必要な変化はどれか。","choices":["尿の濁りや血尿","髪が伸びる","声が大きい","爪が硬い"],"answer":0}];
+
+  const K_PROGRESS = `kai_progress_g${GENRE_ID}`;
+  const K_ANSWERS  = `kai_answers_g${GENRE_ID}`;
+  const K_STREAK   = `kai_wrongstreak_g${GENRE_ID}`;
+  const K_UPDATED  = `kai_updated_g${GENRE_ID}`;
+
+  function fmt3(n){ return String(n).padStart(3,"0"); }
+  function fmt4(n){ return String(n).padStart(4,"0"); }
+
+  let idx = 0;
+  let answers = new Array(100).fill(null);
+  let wrongStreak = new Array(100).fill(0);
+
+  function loadState(){
+    const p = Number(localStorage.getItem(K_PROGRESS));
+    if (Number.isFinite(p) && p >= 0 && p < 100) idx = p;
+
+    const a = localStorage.getItem(K_ANSWERS);
+    if (a){ try { const x = JSON.parse(a); if (Array.isArray(x) && x.length === 100) answers = x; } catch(e){} }
+
+    const s = localStorage.getItem(K_STREAK);
+    if (s){ try { const x = JSON.parse(s); if (Array.isArray(x) && x.length === 100) wrongStreak = x; } catch(e){} }
+  }
+
+  function saveState(){
+    localStorage.setItem(K_PROGRESS, String(idx));
+    localStorage.setItem(K_ANSWERS, JSON.stringify(answers));
+    localStorage.setItem(K_STREAK, JSON.stringify(wrongStreak));
+    localStorage.setItem(K_UPDATED, new Date().toLocaleString("ja-JP"));
+  }
+
+  function render(){
+    document.getElementById("genreTitle").textContent = GENRE_TITLE;
+
+    const globalNo = OFFSET + idx + 1;
+    const withinNo = idx + 1;
+
+    document.getElementById("qid").textContent =
+      `通し番号 ${fmt4(globalNo)} ／ ジャンル内 ${fmt3(withinNo)}（苦情用ID）`;
+
+    document.getElementById("qtext").textContent = questions[idx].text;
+
+    const answeredCount = answers.filter(v => v !== null).length;
+    document.getElementById("meta").innerHTML =
+      `進捗：<b>${withinNo}</b> / 100　回答済み：<b>${answeredCount}</b> / 100　（連続ミス：<b>${wrongStreak[idx]}</b>）`;
+
+    document.getElementById("pbar").style.width = `${Math.round((withinNo/100)*100)}%`;
+
+    const box = document.getElementById("opts");
+    box.innerHTML = "";
+
+    const picked = answers[idx];
+    const ans = questions[idx].answer;
+    const judged = (picked !== null);
+
+    document.getElementById("nextBtn").disabled = !judged;
+
+    const speedUp = (wrongStreak[idx] >= 2);
+
+    questions[idx].choices.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "opt";
+      div.innerHTML = `<span class="lead">${["A","B","C","D"][i]}.</span>${c}`;
+
+      if (judged){
+        if (picked === ans && i === picked) {
+          div.classList.add("blink-pink");
+          if (speedUp) div.classList.add("fast");
+        }
+        if (picked !== ans && i === ans) {
+          div.classList.add("blink-blue");
+          if (speedUp) div.classList.add("fast");
+        }
+      }
+
+      div.addEventListener("click", () => {
+        const chosen = i;
+        const correct = (chosen === ans);
+
+        answers[idx] = chosen;
+
+        if (correct) {
+          wrongStreak[idx] = 0;
+        } else {
+          wrongStreak[idx] = (wrongStreak[idx] || 0) + 1;
+        }
+
+        saveState();
+        render();
+      });
+
+      box.appendChild(div);
+    });
+
+    saveState();
+  }
+
+  function next(){ if (idx < 99){ idx++; render(); } else { alert("このジャンルは最後まで到達しました。表紙へ戻れます。"); } }
+  function prev(){ if (idx > 0){ idx--; render(); } }
+  function goHome(){ saveState(); location.href = "kai_home.html"; }
+
+  function resetThis(){
+    if(!confirm("このジャンルの進捗・回答・連続ミスを削除します。よろしいですか？")) return;
+    localStorage.removeItem(K_PROGRESS);
+    localStorage.removeItem(K_ANSWERS);
+    localStorage.removeItem(K_STREAK);
+    localStorage.removeItem(K_UPDATED);
+    idx = 0;
+    answers = new Array(100).fill(null);
+    wrongStreak = new Array(100).fill(0);
+    render();
+  }
+
+  loadState();
+  render();
+</script>
+</body>
+</html>

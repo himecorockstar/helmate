@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>一週間スケジュール</title>
+
+  <style>
+    :root {
+      --accent-blue: #2f66c9;
+      --radius-xl: 26px;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 10px 32px;
+      font-family: system-ui, -apple-system, "Noto Sans JP",
+        "Yu Gothic", "メイリオ", sans-serif;
+      color: #111827;
+      background:
+        radial-gradient(140% 140% at 0% 0%, #ffe6f3 0, transparent 55%),
+        radial-gradient(140% 140% at 100% 0%, #ffd3ec 0, transparent 55%),
+        radial-gradient(160% 160% at 50% 100%, #ffd9ec 0, #f8b9d7 40%, #f193c1 85%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .outer-frame {
+      width: 100%;
+      max-width: 960px;
+      border-radius: var(--radius-xl);
+      padding: 22px 18px 26px;
+      background: linear-gradient(145deg, #ffe8f4, #ffd4ec);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .title-frame {
+      max-width: 520px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      border: 2px solid #f28abf;
+      background: linear-gradient(135deg, #ffc4df, #ffb1d4);
+      padding: 10px 12px;
+      box-shadow: 0 6px 14px rgba(214, 72, 135, 0.35);
+    }
+
+    .page-title {
+      margin: 0;
+      text-align: center;
+      font-size: clamp(22px, 3vw, 26px);
+      font-weight: 900;
+      letter-spacing: .2em;
+      color: #7b2948;
+    }
+
+    /* 二段目のボタン列 */
+    .nav-buttons {
+      max-width: 520px;
+      margin: 4px auto 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ffe4f3, #ffd1e6);
+      color: #4b2440;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+      white-space: nowrap;
+    }
+
+    .nav-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    .week-container {
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* 日付検索行 */
+    .week-search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+      color: #4b2440;
+    }
+
+    .week-search-label {
+      font-weight: 700;
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+
+    .week-search-row label {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+    }
+
+    .week-search-row input {
+      width: 4.5em;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      text-align: center;
+      font-size: 0.8rem;
+      background: #ffffffcc;
+    }
+
+    .week-search-btn {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* 月曜日の枠の上に置く 3ボタン */
+    .week-shift-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .day-block {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 10px 12px;
+      border: 2px solid #fecdd3;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.35);
+    }
+
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .day-name {
+      /* 曜日（例：月曜日） */
+    }
+
+    .day-date {
+      font-size: 0.82rem;
+      color: #4b5563;
+    }
+
+    /* 書き込み用エリア（contenteditable＋画像対応） */
+    .note {
+      width: 100%;
+      min-height: 5em;
+      border-radius: 10px;
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      resize: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      outline: none;
+      font: inherit;
+    }
+
+    /* 画像：左寄せ＆幅３割程度で表示 */
+    .note img {
+      width: 30%;
+      max-width: 30%;
+      height: auto;
+      display: block;
+      margin: 4px 0;
+      object-fit: contain;
+    }
+
+    /* 説明文（書き込み枠の上） */
+    .note-hint {
+      max-width: 520px;
+      margin: 4px auto 8px;
+      font-size: 0.8rem;
+      color: #4b2440;
+      text-align: left;
+      line-height: 1.5;
+    }
+
+    /* 最下部ロゴ３つ（密着・高さそろえ・最大サイズ） */
+    .logo-strip {
+      max-width: 520px;
+      margin: 12px auto 8px;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .logo-strip img {
+      flex: 1 1 0;
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      display: block;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+<div class="outer-frame">
+
+  <div class="title-frame">
+    <h1 class="page-title">一週間スケジュール</h1>
+  </div>
+
+  <!-- 二段目：右側の「戻る」で index.html -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='getu.html'">
+      スケジュール／月
+    </button>
+    <button class="nav-btn" onclick="location.href='index.html'">
+      戻る
+    </button>
+  </div>
+
+  <div class="week-container">
+
+    <!-- 日付検索：年・月・日 を指定して、その日を含む週を表示 -->
+    <div class="week-search-row">
+      <span class="week-search-label">日付から探す</span>
+      <label>年
+        <input id="week-search-year" type="number" inputmode="numeric" min="2000" max="2100" placeholder="2025">
+      </label>
+      <label>月
+        <input id="week-search-month" type="number" inputmode="numeric" min="1" max="12" placeholder="3">
+      </label>
+      <label>日
+        <input id="week-search-day" type="number" inputmode="numeric" min="1" max="31" placeholder="15">
+      </label>
+      <button class="nav-btn week-search-btn" id="week-search-btn">
+        この週を表示
+      </button>
+    </div>
+
+    <!-- 月曜日の枠の上に置く3つのボタン -->
+    <div class="week-shift-row">
+      <button class="nav-btn week-shift-btn" data-action="next">次週</button>
+      <button class="nav-btn week-shift-btn" data-action="current">今週</button>
+      <button class="nav-btn week-shift-btn" data-action="prev">前週</button>
+    </div>
+
+    <!-- 書き込み枠の上の説明文 -->
+    <p class="note-hint">
+      空白部分を２秒押すと文字を書き込めます。その状態でさらに２秒押すと画像が貼り付けられます。<br>
+      データは未来５２週分、過去５２週分、が記憶され表示できます。
+    </p>
+
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">月曜日</span>
+        <span class="day-date" data-day-index="0"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="mon"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">火曜日</span>
+        <span class="day-date" data-day-index="1"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="tue"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">水曜日</span>
+        <span class="day-date" data-day-index="2"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="wed"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">木曜日</span>
+        <span class="day-date" data-day-index="3"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="thu"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">金曜日</span>
+        <span class="day-date" data-day-index="4"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="fri"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">土曜日</span>
+        <span class="day-date" data-day-index="5"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="sat"></div>
+    </div>
+    <div class="day-block">
+      <div class="day-header">
+        <span class="day-name">日曜日</span>
+        <span class="day-date" data-day-index="6"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="sun"></div>
+    </div>
+
+  </div>
+
+  <!-- 最下部ロゴ：指定の３つ／密着表示 -->
+  <div class="logo-strip">
+    <img src="helmate1.jpg" alt="Helmate ロゴ">
+    <img src="hel.jpg" alt="Hel ロゴ">
+    <img src="nikaido-logo.jpg" alt="Nikaido ロゴ">
+  </div>
+
+  <!-- 画像貼り付け用の隠し input -->
+  <input type="file" id="note-image-input" accept="image/*" style="display:none">
+
+</div>
+
+<script>
+  // ===== 週管理：表示した日が含まれる1週間を基準に、前後52週間分を記憶 =====
+  const WEEK_MIN = -52;
+  const WEEK_MAX =  52;
+  let currentWeekOffset = 0; // 0 = 今週（ページを開いた日の週）
+
+  const notes = document.querySelectorAll(".note[data-key]");
+  const IMAGE_INPUT = document.getElementById("note-image-input");
+  const dayDateLabels = document.querySelectorAll(".day-date");
+
+  // 起動時に、枠内書き込みをロック（2秒長押しで解放）
+  notes.forEach(note => {
+    note.setAttribute("contenteditable", "false");
+    note.dataset.canEdit = "false";
+    note.setAttribute("tabindex", "0");
+  });
+
+  // 起動時に、範囲外（±52週以外）の week_ キーを削除
+  (function cleanupOldWeeks() {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith("week_")) continue;
+      const rest = key.substring(5); // "OFFSET_..."
+      const offsetStr = rest.split("_", 1)[0];
+      const offset = parseInt(offsetStr, 10);
+      if (isNaN(offset) || offset < WEEK_MIN || offset > WEEK_MAX) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+  })();
+
+  // 基準：ページを開いた日の週の「月曜日」を求める
+  const today = new Date();
+  function getBaseMonday(d) {
+    const day = d.getDay(); // 0=日,1=月,...6=土
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // 月曜始まり
+    return new Date(d.getFullYear(), d.getMonth(), diff);
+  }
+  const baseMonday = getBaseMonday(today);
+
+  function makeStorageKey(dayKey, offset) {
+    return "week_" + offset + "_" + dayKey;
+  }
+
+  function updateDates(offset) {
+    // offset 週分だけずらした月曜日から各曜日の日付を計算して表示
+    const monday = new Date(
+      baseMonday.getFullYear(),
+      baseMonday.getMonth(),
+      baseMonday.getDate() + offset * 7
+    );
+
+    dayDateLabels.forEach(label => {
+      const idx = parseInt(label.dataset.dayIndex, 10); // 0=月〜6=日
+      const d = new Date(
+        monday.getFullYear(),
+        monday.getMonth(),
+        monday.getDate() + idx
+      );
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      label.textContent = y + "年" + m + "月" + day + "日";
+    });
+  }
+
+  function loadWeek(offset) {
+    // スケジュール表示
+    notes.forEach(note => {
+      const dayKey = note.dataset.key;
+      let html = "";
+      if (offset >= WEEK_MIN && offset <= WEEK_MAX) {
+        const saved = localStorage.getItem(makeStorageKey(dayKey, offset));
+        if (saved !== null) {
+          html = saved;
+        }
+      }
+      note.innerHTML = html;
+    });
+
+    // 日付ラベル更新
+    updateDates(offset);
+  }
+
+  // 初期表示：今週
+  loadWeek(currentWeekOffset);
+
+  // 入力内容が変わったら保存（前後52週間分のみ）
+  notes.forEach(note => {
+    const dayKey = note.dataset.key;
+    note.addEventListener("input", () => {
+      if (note.dataset.canEdit !== "true") return;
+      if (currentWeekOffset < WEEK_MIN || currentWeekOffset > WEEK_MAX) return;
+      const storageKey = makeStorageKey(dayKey, currentWeekOffset);
+      try {
+        localStorage.setItem(storageKey, note.innerHTML);
+      } catch (e) {
+        console.error("localStorage error:", e);
+      }
+    });
+  });
+
+  // 週切り替えボタン（次週／今週／前週）
+  const weekShiftButtons = document.querySelectorAll(".week-shift-btn");
+  weekShiftButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.action;
+      if (action === "current") {
+        currentWeekOffset = 0;
+      } else if (action === "next") {
+        if (currentWeekOffset < WEEK_MAX) currentWeekOffset++;
+      } else if (action === "prev") {
+        if (currentWeekOffset > WEEK_MIN) currentWeekOffset--;
+      }
+      loadWeek(currentWeekOffset);
+    });
+  });
+
+  // ===== 週検索（日付からその週へジャンプ）=====
+  const weekSearchYear  = document.getElementById("week-search-year");
+  const weekSearchMonth = document.getElementById("week-search-month");
+  const weekSearchDay   = document.getElementById("week-search-day");
+  const weekSearchBtn   = document.getElementById("week-search-btn");
+
+  function jumpToWeekFromDate() {
+    const y = parseInt(weekSearchYear.value, 10);
+    const m = parseInt(weekSearchMonth.value, 10);
+    const d = parseInt(weekSearchDay.value, 10);
+
+    if (!y || !m || !d || m < 1 || m > 12 || d < 1 || d > 31) {
+      alert("年・月・日を正しく入力してください。");
+      return;
+    }
+
+    const target = new Date(y, m - 1, d);
+    if (isNaN(target.getTime())) {
+      alert("存在しない日付が入力されています。");
+      return;
+    }
+
+    const targetMonday = getBaseMonday(target);
+
+    // baseMonday との週差を計算
+    const diffMs = targetMonday.getTime() - baseMonday.getTime();
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const offset = Math.round(diffMs / oneWeekMs); // ほぼ整数になる
+
+    if (offset < WEEK_MIN || offset > WEEK_MAX) {
+      alert("この週のデータは記憶範囲（前後５２週）にありません。");
+      return;
+    }
+
+    currentWeekOffset = offset;
+    loadWeek(currentWeekOffset);
+  }
+
+  weekSearchBtn.addEventListener("click", jumpToWeekFromDate);
+
+  // Enter キーでも動くように（年・月・日 どれかで Enter）
+  [weekSearchYear, weekSearchMonth, weekSearchDay].forEach(input => {
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        jumpToWeekFromDate();
+      }
+    });
+  });
+
+  // ===== 長押しロジック =====
+  // ・書き込み前：２秒押したら文字書き込み開始
+  // ・書き込み状態：２秒押したら画像選択画面を出す
+  let longPressTimer = null;
+  let activeNote = null;
+  let savedRange = null;
+
+  function saveSelectionIfIn(node) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    const range = sel.getRangeAt(0);
+    if (!node.contains(range.startContainer)) return null;
+    return range.cloneRange();
+  }
+
+  function restoreSelection(range) {
+    if (!range) return;
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function enableEditing(note) {
+    if (note.dataset.canEdit === "true") return;
+    note.dataset.canEdit = "true";
+    note.setAttribute("contenteditable", "true");
+    note.focus();
+    const range = document.createRange();
+    range.selectNodeContents(note);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function startLongPress(e, note) {
+    note.focus();
+    cancelLongPress();  // 念のためリセット
+
+    if (note.dataset.canEdit === "true") {
+      // 書き込み中 → 画像用
+      savedRange = saveSelectionIfIn(note);
+      longPressTimer = window.setTimeout(() => {
+        longPressTimer = null;
+        activeNote = note;
+
+        if (!savedRange) {
+          const range = document.createRange();
+          range.selectNodeContents(note);
+          range.collapse(false);
+          savedRange = range;
+        }
+
+        IMAGE_INPUT.click();
+      }, 2000);
+    } else {
+      // まだ書き込み前 → 文字書き込み開始
+      longPressTimer = window.setTimeout(() => {
+        longPressTimer = null;
+        enableEditing(note);
+      }, 2000);
+    }
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer !== null) {
+      clearTimeout(longPressTimer);
+      longPressTimer = null;
+    }
+  }
+
+  notes.forEach(note => {
+    // マウス
+    note.addEventListener("mousedown", e => {
+      if (e.button !== 0) return;
+      startLongPress(e, note);
+    });
+    note.addEventListener("mouseup", cancelLongPress);
+    note.addEventListener("mouseleave", cancelLongPress);
+
+    // タッチ
+    note.addEventListener("touchstart", e => {
+      e.preventDefault();
+      startLongPress(e, note);
+    }, { passive: false });
+    note.addEventListener("touchend", e => {
+      e.preventDefault();
+      cancelLongPress();
+    }, { passive: false });
+    note.addEventListener("touchcancel", cancelLongPress);
+  });
+
+  // 画像選択後：200×200 に加工してから貼り付け＆保存
+  IMAGE_INPUT.addEventListener("change", e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !activeNote) {
+      IMAGE_INPUT.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const originalDataUrl = ev.target.result;
+
+      const imgTmp = new Image();
+      imgTmp.onload = () => {
+        const size = 200;
+        const canvas = document.createElement("canvas");
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+
+        // 白塗り背景
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, size, size);
+
+        // 縦横比を保って 200×200 内に収まるよう縮小
+        const scale = Math.min(size / imgTmp.width, size / imgTmp.height);
+        const dw = imgTmp.width * scale;
+        const dh = imgTmp.height * scale;
+        const dx = (size - dw) / 2;
+        const dy = (size - dh) / 2;
+        ctx.drawImage(imgTmp, dx, dy, dw, dh);
+
+        const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+        // 挿入前に編集可能にしておく
+        enableEditing(activeNote);
+
+        if (savedRange) {
+          restoreSelection(savedRange);
+        } else {
+          const range = document.createRange();
+          range.selectNodeContents(activeNote);
+          range.collapse(false);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+
+        const img = document.createElement("img");
+        img.src = resizedDataUrl;
+        img.alt = "";
+
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          range.insertNode(img);
+          range.setStartAfter(img);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        } else {
+          activeNote.appendChild(img);
+        }
+
+        const dayKey = activeNote.dataset.key;
+        if (dayKey && currentWeekOffset >= WEEK_MIN && currentWeekOffset <= WEEK_MAX) {
+          const storageKey = makeStorageKey(dayKey, currentWeekOffset);
+          try {
+            localStorage.setItem(storageKey, activeNote.innerHTML);
+          } catch (e) {
+            console.error("localStorage error:", e);
+          }
+        }
+
+        activeNote = null;
+        savedRange = null;
+        IMAGE_INPUT.value = "";
+      };
+
+      imgTmp.src = originalDataUrl;
+    };
+    reader.readAsDataURL(file);
+  });
+</script>
+</body>
+</html>

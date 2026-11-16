@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>月間スケジュール</title>
+
+  <style>
+    :root {
+      --accent-blue: #2f66c9;
+      --radius-xl: 26px;
+      --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 10px 32px;
+      font-family: system-ui, -apple-system, "Noto Sans JP",
+        "Yu Gothic", "メイリオ", sans-serif;
+      color: #111827;
+      background:
+        radial-gradient(140% 140% at 0% 0%, #ffe6f3 0, transparent 55%),
+        radial-gradient(140% 140% at 100% 0%, #ffd3ec 0, transparent 55%),
+        radial-gradient(160% 160% at 50% 100%, #ffd9ec 0, #f8b9d7 40%, #f193c1 85%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    .outer-frame {
+      width: 100%;
+      max-width: 960px;
+      border-radius: var(--radius-xl);
+      padding: 22px 18px 26px;
+      background: linear-gradient(145deg, #ffe8f4, #ffd4ec);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .title-frame {
+      max-width: 520px;
+      margin: 0 auto 16px;
+      border-radius: 18px;
+      border: 2px solid #f28abf;
+      background: linear-gradient(135deg, #ffc4df, #ffb1d4);
+      padding: 10px 12px;
+      box-shadow: 0 6px 14px rgba(214, 72, 135, 0.35);
+      text-align: center;
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 26px);
+      font-weight: 900;
+      letter-spacing: .2em;
+      color: #7b2948;
+    }
+
+    .month-label {
+      margin-top: 4px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #374151;
+    }
+
+    /* 週／戻る ボタン */
+    .nav-buttons {
+      max-width: 520px;
+      margin: 4px auto 6px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 2px solid #be185d;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff8abf, #ff3b9b);
+      color: #ffffff;
+      box-shadow: 0 5px 12px rgba(190, 24, 93, 0.6);
+      white-space: nowrap;
+    }
+
+    .nav-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(136, 19, 55, 0.7);
+    }
+
+    /* 検索行 */
+    .month-search-row {
+      max-width: 520px;
+      margin: 4px auto 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.82rem;
+      color: #4b2440;
+    }
+
+    .month-search-label {
+      font-weight: 700;
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+
+    .month-search-row label {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+    }
+
+    .month-search-row input {
+      width: 4.5em;
+      padding: 4px 6px;
+      border-radius: 999px;
+      border: 1px solid #cbd5e1;
+      text-align: center;
+      font-size: 0.8rem;
+      background: #ffffffcc;
+    }
+
+    .month-search-btn {
+      flex: 0 0 auto;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* 翌月／今月／先月 ボタン段 */
+    .month-shift-row {
+      max-width: 520px;
+      margin: 0 auto 8px;
+      display: flex;
+      gap: 8px;
+    }
+
+    .subtitle {
+      max-width: 520px;
+      margin: 0 auto 10px;
+      font-size: 0.9rem;
+      text-align: center;
+      color: #374151;
+    }
+
+    /* 一ヶ月分の枠 */
+    .month-container {
+      max-width: 520px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .day-block {
+      background: #fff;
+      border-radius: 16px;
+      padding: 10px 10px 12px;
+      border: 2px solid #fecdd3;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.35);
+    }
+
+    .day-block.hidden {
+      display: none;
+    }
+
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .day-name { }
+
+    .day-date {
+      font-size: 0.82rem;
+      color: #4b5563;
+    }
+
+    .note {
+      width: 100%;
+      min-height: 5em;
+      border-radius: 10px;
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      outline: none;
+      font: inherit;
+    }
+
+    .note img {
+      width: 30%;
+      max-width: 30%;
+      height: auto;
+      display: block;
+      margin: 4px 0;
+      object-fit: contain;
+    }
+
+    .note-hint {
+      max-width: 520px;
+      margin: 8px auto 4px;
+      font-size: 0.8rem;
+      color: #4b2440;
+      text-align: left;
+    }
+
+    .logo-strip {
+      max-width: 520px;
+      margin: 12px auto 8px;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 0;
+    }
+
+    .logo-strip img {
+      flex: 1 1 0;
+      width: 100%;
+      height: 150px;
+      object-fit: contain;
+      display: block;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+<div class="outer-frame">
+
+  <div class="title-frame">
+    <div class="page-title">月間スケジュール</div>
+    <div class="month-label" id="month-label">西暦 年 月</div>
+  </div>
+
+  <!-- 上段ナビ：週版へ／戻る -->
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="location.href='syu.html'">
+      スケジュール／週
+    </button>
+    <button class="nav-btn" onclick="location.href='index.html'">
+      戻る
+    </button>
+  </div>
+
+  <!-- 日付検索：年・月・日を指定して、その日を含む月を表示 -->
+  <div class="month-search-row">
+    <span class="month-search-label">日付から探す</span>
+    <label>年
+      <input id="month-search-year" type="number" inputmode="numeric" min="2000" max="2100" placeholder="2025">
+    </label>
+    <label>月
+      <input id="month-search-month" type="number" inputmode="numeric" min="1" max="12" placeholder="3">
+    </label>
+    <label>日
+      <input id="month-search-day" type="number" inputmode="numeric" min="1" max="31" placeholder="15">
+    </label>
+    <button class="nav-btn month-search-btn" id="month-search-btn">
+      表示
+    </button>
+  </div>
+
+  <!-- 翌月／今月／先月 ボタン段 -->
+  <div class="month-shift-row">
+    <button class="nav-btn month-shift-btn" data-action="next">翌月</button>
+    <button class="nav-btn month-shift-btn" data-action="current">今月</button>
+    <button class="nav-btn month-shift-btn" data-action="prev">先月</button>
+  </div>
+
+  <div class="subtitle">
+    空白部分を２秒押すと文字を書き込めます。その状態でさらに２秒押すと画像が貼り付けられます。<br>
+    データは未来１年分過去１０年分が記憶され表示できます。
+  </div>
+
+  <div class="month-container" id="month-container">
+    <!-- 1〜31日分の枠（元のまま） -->
+    <section class="day-block" data-day="1">
+      <div class="day-header">
+        <span class="day-name">1日</span>
+        <span class="day-date" data-day="1"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day1"></div>
+    </section>
+    <section class="day-block" data-day="2">
+      <div class="day-header">
+        <span class="day-name">2日</span>
+        <span class="day-date" data-day="2"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day2"></div>
+    </section>
+    <section class="day-block" data-day="3">
+      <div class="day-header">
+        <span class="day-name">3日</span>
+        <span class="day-date" data-day="3"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day3"></div>
+    </section>
+    <section class="day-block" data-day="4">
+      <div class="day-header">
+        <span class="day-name">4日</span>
+        <span class="day-date" data-day="4"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day4"></div>
+    </section>
+    <section class="day-block" data-day="5">
+      <div class="day-header">
+        <span class="day-name">5日</span>
+        <span class="day-date" data-day="5"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day5"></div>
+    </section>
+    <section class="day-block" data-day="6">
+      <div class="day-header">
+        <span class="day-name">6日</span>
+        <span class="day-date" data-day="6"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day6"></div>
+    </section>
+    <section class="day-block" data-day="7">
+      <div class="day-header">
+        <span class="day-name">7日</span>
+        <span class="day-date" data-day="7"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day7"></div>
+    </section>
+    <section class="day-block" data-day="8">
+      <div class="day-header">
+        <span class="day-name">8日</span>
+        <span class="day-date" data-day="8"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day8"></div>
+    </section>
+    <section class="day-block" data-day="9">
+      <div class="day-header">
+        <span class="day-name">9日</span>
+        <span class="day-date" data-day="9"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day9"></div>
+    </section>
+    <section class="day-block" data-day="10">
+      <div class="day-header">
+        <span class="day-name">10日</span>
+        <span class="day-date" data-day="10"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day10"></div>
+    </section>
+    <section class="day-block" data-day="11">
+      <div class="day-header">
+        <span class="day-name">11日</span>
+        <span class="day-date" data-day="11"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day11"></div>
+    </section>
+    <section class="day-block" data-day="12">
+      <div class="day-header">
+        <span class="day-name">12日</span>
+        <span class="day-date" data-day="12"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day12"></div>
+    </section>
+    <section class="day-block" data-day="13">
+      <div class="day-header">
+        <span class="day-name">13日</span>
+        <span class="day-date" data-day="13"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day13"></div>
+    </section>
+    <section class="day-block" data-day="14">
+      <div class="day-header">
+        <span class="day-name">14日</span>
+        <span class="day-date" data-day="14"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day14"></div>
+    </section>
+    <section class="day-block" data-day="15">
+      <div class="day-header">
+        <span class="day-name">15日</span>
+        <span class="day-date" data-day="15"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day15"></div>
+    </section>
+    <section class="day-block" data-day="16">
+      <div class="day-header">
+        <span class="day-name">16日</span>
+        <span class="day-date" data-day="16"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day16"></div>
+    </section>
+    <section class="day-block" data-day="17">
+      <div class="day-header">
+        <span class="day-name">17日</span>
+        <span class="day-date" data-day="17"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day17"></div>
+    </section>
+    <section class="day-block" data-day="18">
+      <div class="day-header">
+        <span class="day-name">18日</span>
+        <span class="day-date" data-day="18"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day18"></div>
+    </section>
+    <section class="day-block" data-day="19">
+      <div class="day-header">
+        <span class="day-name">19日</span>
+        <span class="day-date" data-day="19"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day19"></div>
+    </section>
+    <section class="day-block" data-day="20">
+      <div class="day-header">
+        <span class="day-name">20日</span>
+        <span class="day-date" data-day="20"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day20"></div>
+    </section>
+    <section class="day-block" data-day="21">
+      <div class="day-header">
+        <span class="day-name">21日</span>
+        <span class="day-date" data-day="21"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day21"></div>
+    </section>
+    <section class="day-block" data-day="22">
+      <div class="day-header">
+        <span class="day-name">22日</span>
+        <span class="day-date" data-day="22"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day22"></div>
+    </section>
+    <section class="day-block" data-day="23">
+      <div class="day-header">
+        <span class="day-name">23日</span>
+        <span class="day-date" data-day="23"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day23"></div>
+    </section>
+    <section class="day-block" data-day="24">
+      <div class="day-header">
+        <span class="day-name">24日</span>
+        <span class="day-date" data-day="24"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day24"></div>
+    </section>
+    <section class="day-block" data-day="25">
+      <div class="day-header">
+        <span class="day-name">25日</span>
+        <span class="day-date" data-day="25"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day25"></div>
+    </section>
+    <section class="day-block" data-day="26">
+      <div class="day-header">
+        <span class="day-name">26日</span>
+        <span class="day-date" data-day="26"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day26"></div>
+    </section>
+    <section class="day-block" data-day="27">
+      <div class="day-header">
+        <span class="day-name">27日</span>
+        <span class="day-date" data-day="27"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day27"></div>
+    </section>
+    <section class="day-block" data-day="28">
+      <div class="day-header">
+        <span class="day-name">28日</span>
+        <span class="day-date" data-day="28"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day28"></div>
+    </section>
+    <section class="day-block" data-day="29">
+      <div class="day-header">
+        <span class="day-name">29日</span>
+        <span class="day-date" data-day="29"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day29"></div>
+    </section>
+    <section class="day-block" data-day="30">
+      <div class="day-header">
+        <span class="day-name">30日</span>
+        <span class="day-date" data-day="30"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day30"></div>
+    </section>
+    <section class="day-block" data-day="31">
+      <div class="day-header">
+        <span class="day-name">31日</span>
+        <span class="day-date" data-day="31"></span>
+      </div>
+      <div class="note" contenteditable="true" data-key="day31"></div>
+    </section>
+  </div>
+
+  <p class="note-hint">
+    空白部分を２秒押すと文字を書き込めます。その状態でさらに２秒押すと画像が貼り付けられます。<br>
+    データは未来１年分過去１０年分が記憶され表示できます。
+  </p>
+
+  <div class="logo-strip">
+    <img src="helmate1.jpg" alt="Helmate ロゴ">
+    <img src="hel.jpg" alt="Hel ロゴ">
+    <img src="nikaido-logo.jpg" alt="Nikaido ロゴ">
+  </div>
+
+</div>
+
+<!-- 画像貼り付け用の隠し input -->
+<input type="file" id="note-image-input" accept="image/*" style="display:none">
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const monthLabel    = document.getElementById("month-label");
+    const dayBlocks     = document.querySelectorAll(".day-block[data-day]");
+    const notes         = document.querySelectorAll(".note[data-key]");
+    const IMAGE_INPUT   = document.getElementById("note-image-input");
+
+    const monthSearchYear  = document.getElementById("month-search-year");
+    const monthSearchMonth = document.getElementById("month-search-month");
+    const monthSearchDay   = document.getElementById("month-search-day");
+    const monthSearchBtn   = document.getElementById("month-search-btn");
+
+    // 起動時：文字書き込みロック
+    notes.forEach(note => {
+      note.setAttribute("contenteditable", "false");
+      note.dataset.canEdit = "false";
+      note.setAttribute("tabindex", "0");
+    });
+
+    // 今日を基準
+    const today       = new Date();
+    const baseYear    = today.getFullYear();
+    const baseMonth   = today.getMonth(); // 0〜11
+    let currentOffset = 0;
+    let currentYear   = baseYear;
+    let currentMonth  = baseMonth;
+
+    // 古い month_ データ掃除（過去10年・未来1年以外）
+    (function cleanupOldMonths() {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith("month_")) continue;
+        const parts = key.split("_");
+        if (parts.length < 4) continue;
+        const y = parseInt(parts[1], 10);
+        const m = parseInt(parts[2], 10);
+        if (isNaN(y) || isNaN(m)) continue;
+
+        const diffMonths =
+          (y - baseYear) * 12 + ((m - 1) - baseMonth);
+        if (diffMonths < -120 || diffMonths > 12) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    })();
+
+    function getStorageKey(year, monthIndex, dayKey) {
+      return "month_" + year + "_" + (monthIndex + 1) + "_" + dayKey;
+    }
+
+    // 指定年月の1か月分を表示
+    function renderMonth(year, monthIndex) {
+      currentYear  = year;
+      currentMonth = monthIndex;
+
+      monthLabel.textContent = year + "年 " + (monthIndex + 1) + "月";
+
+      const weekdayNames = ["日","月","火","水","木","金","土"];
+
+      dayBlocks.forEach(block => {
+        const day = parseInt(block.getAttribute("data-day"), 10);
+        if (isNaN(day)) return;
+
+        const date = new Date(year, monthIndex, day);
+        const noteArea  = block.querySelector(".note[data-key]");
+        const dateLabel = block.querySelector(".day-date[data-day]");
+        const nameLabel = block.querySelector(".day-name");
+
+        if (date.getMonth() !== monthIndex) {
+          block.classList.add("hidden");
+          if (noteArea)  noteArea.innerHTML = "";
+          if (dateLabel) dateLabel.textContent = "";
+          if (nameLabel) nameLabel.textContent = day + "日";
+          return;
+        }
+
+        block.classList.remove("hidden");
+
+        const y = date.getFullYear();
+        const m = date.getMonth() + 1;
+        const d = date.getDate();
+        const w = weekdayNames[date.getDay()];
+
+        if (dateLabel) {
+          dateLabel.textContent = y + "年" + m + "月" + d + "日";
+        }
+        if (nameLabel) {
+          nameLabel.textContent = d + "日(" + w + ")";
+        }
+
+        if (noteArea) {
+          const key = noteArea.getAttribute("data-key");
+          const storageKey = getStorageKey(year, monthIndex, key);
+          try {
+            const saved = localStorage.getItem(storageKey);
+            noteArea.innerHTML = saved !== null ? saved : "";
+          } catch (e) {
+            noteArea.innerHTML = "";
+          }
+        }
+      });
+    }
+
+    // 初期表示：今月
+    renderMonth(baseYear, baseMonth);
+
+    // 入力 → 保存
+    notes.forEach(note => {
+      const key = note.getAttribute("data-key");
+      note.addEventListener("input", () => {
+        if (note.dataset.canEdit !== "true") return;
+        const storageKey = getStorageKey(currentYear, currentMonth, key);
+        try {
+          localStorage.setItem(storageKey, note.innerHTML);
+        } catch (e) {
+          console.error("localStorage error:", e);
+        }
+      });
+    });
+
+    // 翌月／今月／先月
+    const monthShiftButtons = document.querySelectorAll(".month-shift-btn");
+    monthShiftButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const action = btn.dataset.action;
+        if (action === "current") {
+          currentOffset = 0;
+        } else if (action === "next") {
+          if (currentOffset < 12) currentOffset++;
+        } else if (action === "prev") {
+          if (currentOffset > -120) currentOffset--;
+        }
+
+        const baseDate = new Date(baseYear, baseMonth, 1);
+        const target   = new Date(
+          baseDate.getFullYear(),
+          baseDate.getMonth() + currentOffset,
+          1
+        );
+        renderMonth(target.getFullYear(), target.getMonth());
+      });
+    });
+
+    // 全角数字 → 半角数字にしてから文字列で返す
+    function normalizeNumberInput(el) {
+      if (!el) return "";
+      return el.value
+        .replace(/[０-９]/g, ch =>
+          String.fromCharCode(ch.charCodeAt(0) - 0xFEE0)
+        )
+        .trim();
+    }
+
+    // 入力が空なら「今日の値」を使うヘルパー
+    function readIntOrToday(el, fallback) {
+      const s = normalizeNumberInput(el);
+      if (!s) return fallback;        // 未入力なら今日
+      const n = parseInt(s, 10);
+      return isNaN(n) ? NaN : n;
+    }
+
+    // 日付からその月へジャンプ
+    function jumpToMonthFromDate() {
+      const now = new Date();
+
+      const y = readIntOrToday(monthSearchYear,  now.getFullYear());
+      const m = readIntOrToday(monthSearchMonth, now.getMonth() + 1);
+      const d = readIntOrToday(monthSearchDay,   now.getDate());
+
+      if (
+        isNaN(y) || isNaN(m) || isNaN(d) ||
+        m < 1 || m > 12 || d < 1 || d > 31
+      ) {
+        alert("年・月・日を正しく入力してください。");
+        return;
+      }
+
+      const target = new Date(y, m - 1, d);
+
+      // 実在しない日付（例: 4月31日）チェック
+      if (
+        target.getFullYear() !== y ||
+        (target.getMonth() + 1) !== m ||
+        target.getDate() !== d
+      ) {
+        alert("存在しない日付が入力されています。");
+        return;
+      }
+
+      const targetYear  = target.getFullYear();
+      const targetMonth = target.getMonth();
+
+      const diffMonths =
+        (targetYear - baseYear) * 12 + (targetMonth - baseMonth);
+
+      if (diffMonths < -120 || diffMonths > 12) {
+        alert("この月のデータは記憶範囲（過去１０年・未来１年）にありません。");
+        return;
+      }
+
+      currentOffset = diffMonths;
+      renderMonth(targetYear, targetMonth);
+    }
+
+    if (monthSearchBtn) {
+      monthSearchBtn.addEventListener("click", jumpToMonthFromDate);
+    }
+
+    [monthSearchYear, monthSearchMonth, monthSearchDay].forEach(input => {
+      if (!input) return;
+      input.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          jumpToMonthFromDate();
+        }
+      });
+    });
+
+    // ===== 長押しロジック（2秒） =====
+    let longPressTimer = null;
+    let activeNote = null;
+    let savedRange = null;
+
+    function saveSelectionIfIn(node) {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      if (!node.contains(range.startContainer)) return null;
+      return range.cloneRange();
+    }
+
+    function restoreSelection(range) {
+      if (!range) return;
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function enableEditing(note) {
+      if (note.dataset.canEdit === "true") return;
+      note.dataset.canEdit = "true";
+      note.setAttribute("contenteditable", "true");
+      note.focus();
+      const range = document.createRange();
+      range.selectNodeContents(note);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function startLongPress(e, note) {
+      note.focus();
+      cancelLongPress();
+
+      if (note.dataset.canEdit === "true") {
+        savedRange = saveSelectionIfIn(note);
+        longPressTimer = window.setTimeout(() => {
+          longPressTimer = null;
+          activeNote = note;
+
+          if (!savedRange) {
+            const range = document.createRange();
+            range.selectNodeContents(note);
+            range.collapse(false);
+            savedRange = range;
+          }
+
+          IMAGE_INPUT.click();
+        }, 2000);
+      } else {
+        longPressTimer = window.setTimeout(() => {
+          longPressTimer = null;
+          enableEditing(note);
+        }, 2000);
+      }
+    }
+
+    function cancelLongPress() {
+      if (longPressTimer !== null) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+    }
+
+    notes.forEach(note => {
+      note.addEventListener("mousedown", e => {
+        if (e.button !== 0) return;
+        startLongPress(e, note);
+      });
+      note.addEventListener("mouseup", cancelLongPress);
+      note.addEventListener("mouseleave", cancelLongPress);
+
+      note.addEventListener("touchstart", e => {
+        e.preventDefault();
+        startLongPress(e, note);
+      }, { passive: false });
+      note.addEventListener("touchend", e => {
+        e.preventDefault();
+        cancelLongPress();
+      }, { passive: false });
+      note.addEventListener("touchcancel", cancelLongPress);
+    });
+
+    IMAGE_INPUT.addEventListener("change", e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file || !activeNote) {
+        IMAGE_INPUT.value = "";
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const originalDataUrl = ev.target.result;
+
+        const imgTmp = new Image();
+        imgTmp.onload = () => {
+          const size = 200;
+          const canvas = document.createElement("canvas");
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, size, size);
+
+          const scale = Math.min(size / imgTmp.width, size / imgTmp.height);
+          const dw = imgTmp.width * scale;
+          const dh = imgTmp.height * scale;
+          const dx = (size - dw) / 2;
+          const dy = (size - dh) / 2;
+          ctx.drawImage(imgTmp, dx, dy, dw, dh);
+
+          const resizedDataUrl = canvas.toDataURL("image/jpeg", 0.9);
+
+          enableEditing(activeNote);
+
+          if (savedRange) {
+            restoreSelection(savedRange);
+          } else {
+            const range = document.createRange();
+            range.selectNodeContents(activeNote);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+
+          const img = document.createElement("img");
+          img.src = resizedDataUrl;
+          img.alt = "";
+
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            range.insertNode(img);
+            range.setStartAfter(img);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else {
+            activeNote.appendChild(img);
+          }
+
+          const key = activeNote.getAttribute("data-key");
+          if (key) {
+            const storageKey = getStorageKey(currentYear, currentMonth, key);
+            try {
+              localStorage.setItem(storageKey, activeNote.innerHTML);
+            } catch (e) {
+              console.error("localStorage error:", e);
+            }
+          }
+
+          activeNote = null;
+          savedRange = null;
+          IMAGE_INPUT.value = "";
+        };
+
+        imgTmp.src = originalDataUrl;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+</script>
+</body>
+</html>

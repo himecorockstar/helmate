@@ -1,0 +1,1272 @@
+
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<title>ひと息コーナー</title>
+
+<style>
+  :root{
+    --bg1:#0b1020;
+    --bg2:#102a5a;
+    --card:#ffffff;
+    --ink:#0b1020;
+    --muted:rgba(10,16,32,.65);
+    --line:rgba(10,16,32,.12);
+    --glass:rgba(255,255,255,.14);
+
+    --accent1:#ff3ea5;
+    --accent2:#7c3aed;
+    --accent3:#06b6d4;
+    --accent4:#f59e0b;
+    --good:#22c55e;
+    --bad:#ef4444;
+
+    --shadow: 0 18px 28px rgba(0,0,0,.22);
+    --shadow2: 0 10px 18px rgba(0,0,0,.18);
+    --r:20px;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+    color:rgba(255,255,255,.92);
+    background:
+      radial-gradient(circle at 15% 20%, rgba(124,58,237,.50), transparent 42%),
+      radial-gradient(circle at 80% 30%, rgba(6,182,212,.45), transparent 48%),
+      radial-gradient(circle at 30% 85%, rgba(245,158,11,.35), transparent 45%),
+      radial-gradient(circle at 80% 85%, rgba(255,62,165,.38), transparent 45%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    min-height:100vh;
+  }
+
+  .wrap{
+    max-width:980px;
+    margin:0 auto;
+    padding:18px 14px 26px;
+  }
+
+  .panel{
+    border-radius:28px;
+    background: rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.14);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 14px;
+    gap:12px;
+    background:
+      linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.05));
+    border-bottom:1px solid rgba(255,255,255,.14);
+  }
+
+  .top-left{display:flex; flex-direction:column; gap:2px;}
+  .title{
+    font-weight:1000;
+    letter-spacing:.02em;
+    font-size:18px;
+  }
+  .sub{
+    font-size:12px;
+    color: rgba(255,255,255,.74);
+  }
+
+  .btn{
+    appearance:none;
+    border:0;
+    border-radius:16px;
+    padding:12px 14px;
+    font-weight:1000;
+    letter-spacing:.02em;
+    cursor:pointer;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action: manipulation;
+  }
+  .btn.ghost{
+    background: rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
+    border:1px solid rgba(255,255,255,.18);
+  }
+  .btn.ghost:active{transform: translateY(1px);}
+
+  .content{
+    padding:14px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:12px;
+  }
+  @media (max-width:680px){
+    .grid{grid-template-columns: 1fr;}
+  }
+
+  .menu-card{
+    background: rgba(255,255,255,.92);
+    color: var(--ink);
+    border-radius: 22px;
+    border:1px solid rgba(10,16,32,.10);
+    box-shadow: var(--shadow2);
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    position:relative;
+    overflow:hidden;
+  }
+  .menu-card:before{
+    content:"";
+    position:absolute; inset:-2px;
+    background:
+      radial-gradient(circle at 10% 20%, rgba(255,62,165,.26), transparent 38%),
+      radial-gradient(circle at 90% 25%, rgba(124,58,237,.24), transparent 40%),
+      radial-gradient(circle at 35% 90%, rgba(6,182,212,.22), transparent 40%),
+      radial-gradient(circle at 85% 85%, rgba(245,158,11,.22), transparent 40%);
+    filter: blur(0px);
+    opacity:.9;
+    pointer-events:none;
+  }
+  .menu-card > *{position:relative;}
+  .menu-card .h{font-weight:1000; font-size:16px;}
+  .menu-card .p{color:rgba(10,16,32,.72); font-size:12px; line-height:1.45;}
+
+  .btn.primary{
+    width:100%;
+    background: linear-gradient(135deg, rgba(255,62,165,1), rgba(124,58,237,1));
+    color:white;
+    border:0;
+    box-shadow: 0 10px 18px rgba(124,58,237,.28);
+  }
+  .btn.primary:active{transform: translateY(1px);}
+
+  .btn.sun{
+    background: linear-gradient(135deg, rgba(245,158,11,1), rgba(255,62,165,1));
+    color:#fff;
+    box-shadow: 0 10px 18px rgba(245,158,11,.22);
+  }
+  .btn.sun:active{transform: translateY(1px);}
+
+  .btn.danger{
+    background: linear-gradient(135deg, rgba(239,68,68,1), rgba(124,58,237,1));
+    color:#fff;
+    box-shadow: 0 10px 18px rgba(239,68,68,.22);
+  }
+  .btn.danger:active{transform: translateY(1px);}
+
+  .btn.casino-red{
+    background: linear-gradient(135deg, #7a0000, #ff3b00, #d4a100);
+    color:#fff;
+    border:1px solid rgba(255,215,0,.55);
+    box-shadow: 0 16px 28px rgba(122,0,0,.25);
+  }
+  .btn.casino-gold{
+    background: linear-gradient(135deg, #3c2b00, #d4a100, #fff0b5);
+    color:#221600;
+    border:1px solid rgba(255,240,181,.85);
+    box-shadow: 0 16px 28px rgba(212,161,0,.22);
+  }
+
+  .note{
+    margin-top:12px;
+    font-size:12px;
+    color: rgba(255,255,255,.76);
+    line-height:1.55;
+  }
+
+  .game-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .game-title{
+    font-weight:1000;
+    font-size:16px;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+  .badge{
+    display:inline-block;
+    align-self:flex-start;
+    font-size:11px;
+    color: rgba(255,255,255,.84);
+    background: rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.18);
+    padding:4px 8px;
+    border-radius:999px;
+  }
+
+  .hint{
+    font-size:12px;
+    color: rgba(255,255,255,.78);
+    margin:6px 0 10px;
+    line-height:1.5;
+  }
+
+  /* ===== 経過時間＆ランキング ===== */
+  .statbox{
+    margin:10px 0 12px;
+    padding:10px 10px;
+    border-radius:18px;
+    background: rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.16);
+  }
+  .statrow{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .timerline{
+    display:flex;
+    gap:10px;
+    align-items:baseline;
+    flex-wrap:wrap;
+  }
+  .tlabel{font-size:12px; color:rgba(255,255,255,.78); font-weight:900;}
+  .tvalue{font-size:18px; font-weight:1000; letter-spacing:.02em;}
+  .tunit{font-size:12px; color:rgba(255,255,255,.78); font-weight:900;}
+  .rank{
+    width:100%;
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px solid rgba(255,255,255,.14);
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+  }
+  .ranktitle{
+    font-size:12px;
+    font-weight:1000;
+    color:rgba(255,255,255,.86);
+  }
+  .rankline{
+    font-size:12px;
+    color:rgba(255,255,255,.82);
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .rankline b{font-weight:1000;}
+  .rankline span{color:rgba(255,255,255,.72);}
+  .rankbtns{
+    display:flex;
+    gap:10px;
+    margin-top:8px;
+    flex-wrap:wrap;
+  }
+  .btn.small{
+    padding:10px 12px;
+    border-radius:14px;
+    font-size:12px;
+  }
+
+  /* ===== ①豆知識クイズ ===== */
+  .quiz-card{
+    border-radius: 22px;
+    background: rgba(255,255,255,.92);
+    color: var(--ink);
+    border:1px solid rgba(10,16,32,.10);
+    box-shadow: var(--shadow2);
+    padding:14px;
+  }
+  .quiz-q{
+    font-weight:1000;
+    font-size:15px;
+    line-height:1.5;
+  }
+  .answer-box{
+    margin-top:10px;
+    padding:10px;
+    border-radius:16px;
+    background: rgba(10,16,32,.06);
+    border:1px solid rgba(10,16,32,.08);
+    display:none;
+  }
+  .answer-box.on{display:block;}
+  .quiz-a{
+    font-weight:1000;
+    color: rgba(10,16,32,.86);
+    line-height:1.55;
+  }
+  .quiz-meta{
+    margin-top:8px;
+    font-size:12px;
+    color: rgba(10,16,32,.62);
+  }
+
+  /* ===== ②色合わせ ===== */
+  .color-target{
+    height:66px;
+    border-radius:22px;
+    border:1px solid rgba(255,255,255,.18);
+    box-shadow: 0 12px 20px rgba(0,0,0,.18);
+    margin:10px 0 12px;
+  }
+
+  .color-counter{
+    height:66px;
+    border-radius:22px;
+    border:2px solid rgba(255,255,255,.30);
+    box-shadow: 0 12px 20px rgba(0,0,0,.18);
+    margin:10px 0 10px;
+    background: rgba(255,255,255,.08);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:1000;
+    letter-spacing:.02em;
+  }
+  .color-counter .label{
+    font-size:14px;
+    color: rgba(255,255,255,.86);
+  }
+  .color-counter .num{
+    font-size:18px;
+    margin:0 6px;
+    display:inline-block;
+    transform-origin:center;
+  }
+  .color-counter .num.bump{
+    animation: bump .22s ease-out 1;
+  }
+  @keyframes bump{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(1.25); }
+    100%{ transform:scale(1); }
+  }
+  .color-grid{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:10px;
+  }
+  .cbtn{
+    height:56px;
+    border-radius:20px;
+    border:1px solid rgba(255,255,255,.20);
+    box-shadow: 0 10px 16px rgba(0,0,0,.16);
+    cursor:pointer;
+    touch-action: manipulation;
+    user-select:none; -webkit-user-select:none;
+    position:relative;
+    overflow:hidden;
+  }
+  .cbtn:active{transform: translateY(1px);}
+  .cbtn:after{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+    opacity:.55;
+    pointer-events:none;
+  }
+
+  /* ===== ③数字順 ===== */
+  .num-grid{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:10px;
+    margin-top:10px;
+  }
+  @media (max-width:560px){
+    .num-grid{grid-template-columns: repeat(4, 1fr);}
+  }
+  .num{
+    height:56px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.10);
+    color: rgba(255,255,255,.92);
+    font-weight:1000;
+    font-size:18px;
+    box-shadow: 0 10px 16px rgba(0,0,0,.16);
+    cursor:pointer;
+    touch-action: manipulation;
+    user-select:none; -webkit-user-select:none;
+  }
+  .num:active{transform: translateY(1px);}
+  .num.done{
+    background: rgba(34,197,94,.18);
+    border-color: rgba(34,197,94,.35);
+    color: rgba(255,255,255,.92);
+    opacity:.35;
+  }
+
+  /* ===== ④Wトランプ ===== */
+  .tr-grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:10px;
+    margin-top:10px;
+  }
+  @media (max-width:560px){
+    .tr-grid{grid-template-columns: repeat(3, 1fr);}
+  }
+
+  .tr-card{
+    height:92px;
+    border-radius:18px;
+    border:1px solid rgba(10,16,32,.12);
+    background: rgba(255,255,255,.92);
+    box-shadow: 0 12px 18px rgba(0,0,0,.14);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    user-select:none; -webkit-user-select:none;
+    touch-action: manipulation;
+    position:relative;
+    overflow:hidden;
+  }
+  .tr-card:active{transform: translateY(1px);}
+
+  /* 裏面：本物っぽい背柄 */
+  .tr-card.back{
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255,255,255,.18), transparent 40%),
+      radial-gradient(circle at 85% 25%, rgba(255,255,255,.16), transparent 45%),
+      radial-gradient(circle at 25% 85%, rgba(255,255,255,.14), transparent 42%),
+      linear-gradient(135deg, rgba(10,16,32,.96), rgba(124,58,237,.88));
+    border-color: rgba(255,255,255,.20);
+  }
+  .tr-card.back:before{
+    content:"";
+    position:absolute; inset:10px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.26);
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.08);
+    background:
+      repeating-linear-gradient(45deg,
+        rgba(255,255,255,.10) 0px,
+        rgba(255,255,255,.10) 6px,
+        rgba(255,255,255,.02) 6px,
+        rgba(255,255,255,.02) 12px);
+    opacity:.95;
+  }
+  .tr-card.back .backmark{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:1000;
+    letter-spacing:.08em;
+    color: rgba(255,255,255,.92);
+    text-shadow: 0 2px 10px rgba(0,0,0,.35);
+    font-size:16px;
+  }
+
+  /* 表面：トランプの角インデックス */
+  .tr-face{
+    position:absolute; inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .tr-corner{
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+    font-weight:1000;
+    font-size:14px;
+    line-height:1;
+  }
+  .tr-corner.br{
+    right:10px; bottom:10px;
+    transform: rotate(180deg);
+    align-items:flex-start;
+  }
+  .tr-corner.tl{ left:10px; top:10px; }
+  .tr-suit{font-size:14px; line-height:1;}
+  .tr-big{
+    font-size:34px;
+    font-weight:1000;
+    opacity:.92;
+  }
+  .tr-red{ color:#d61f2c; }
+  .tr-black{ color:#121826; }
+
+  .tr-card.matched{
+    background: linear-gradient(135deg, rgba(34,197,94,.22), rgba(6,182,212,.16));
+    border-color: rgba(34,197,94,.40);
+  }
+
+  /* ===== ご褒美：全画面0.5秒点滅 ===== */
+  .celebrate{
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:9999;
+    opacity:0;
+  }
+  .celebrate.on{
+    opacity:1;
+    animation: celebrateFlash .5s linear 1;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(255,62,165,.85), transparent 45%),
+      radial-gradient(circle at 80% 30%, rgba(124,58,237,.85), transparent 48%),
+      radial-gradient(circle at 30% 85%, rgba(6,182,212,.85), transparent 45%),
+      radial-gradient(circle at 80% 80%, rgba(245,158,11,.85), transparent 42%),
+      radial-gradient(circle at 55% 55%, rgba(34,197,94,.75), transparent 40%),
+      radial-gradient(circle at 15% 75%, rgba(239,68,68,.75), transparent 40%);
+    mix-blend-mode: screen;
+  }
+  @keyframes celebrateFlash{
+    0%   { filter:saturate(1.2) contrast(1.1); opacity:0; transform:scale(1.00); }
+    10%  { opacity:1; }
+    20%  { opacity:.15; }
+    30%  { opacity:1; }
+    40%  { opacity:.18; }
+    50%  { opacity:1; transform:scale(1.01); }
+    60%  { opacity:.2; }
+    70%  { opacity:1; }
+    80%  { opacity:.15; }
+    90%  { opacity:1; }
+    100% { opacity:0; transform:scale(1.00); }
+  }
+</style>
+</head>
+
+<body>
+<div class="celebrate" id="celebrate"></div>
+
+<div class="wrap">
+  <div class="panel">
+    <div class="topbar">
+      <div class="top-left">
+        <div class="title">ひと息コーナー</div>
+        <div class="sub">明るく気分転換（タップだけ／長押しなし）</div>
+      </div>
+      <button class="btn ghost" id="btnExit">閉じる</button>
+    </div>
+
+    <div class="content" id="screen"></div>
+  </div>
+</div>
+
+<script>
+/* 埋め込み(iframe)でも最前面へ */
+(function(){
+  try{
+    if(window.top && window.top !== window.self){
+      window.top.location.href = window.location.href;
+    }
+  }catch(e){}
+})();
+</script>
+
+<script>
+(() => {
+  const screen = document.getElementById('screen');
+  const celebrateEl = document.getElementById('celebrate');
+
+  document.getElementById('btnExit').addEventListener('click', () => {
+    location.href = 'index.html';
+  });
+
+  function h(tag, attrs={}, children=[]){
+    const el = document.createElement(tag);
+    for(const [k,v] of Object.entries(attrs)){
+      if(k === 'class') el.className = v;
+      else if(k === 'text') el.textContent = v;
+      else el.setAttribute(k, v);
+    }
+    for(const c of children){
+      if(typeof c === 'string') el.appendChild(document.createTextNode(c));
+      else el.appendChild(c);
+    }
+    return el;
+  }
+  function clear(){ screen.textContent=''; }
+
+  function celebrate(){
+    celebrateEl.classList.remove('on');
+    void celebrateEl.offsetWidth;
+    celebrateEl.classList.add('on');
+    setTimeout(() => { celebrateEl.classList.remove('on'); }, 520);
+  }
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j = (Math.random()*(i+1))|0;
+      [arr[i],arr[j]] = [arr[j],arr[i]];
+    }
+    return arr;
+  }
+  function clamp3Top(list){
+    const a = list.slice().sort((x,y)=>x.sec - y.sec);
+    return a.slice(0,3);
+  }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function formatDateTime(ts){
+    const d = new Date(ts);
+    const y = d.getFullYear();
+    const m = pad2(d.getMonth()+1);
+    const day = pad2(d.getDate());
+    const hh = pad2(d.getHours());
+    const mm = pad2(d.getMinutes());
+    return `${y}-${m}-${day} ${hh}:${mm}`;
+  }
+  function nowMs(){
+    return (performance && performance.now) ? performance.now() : Date.now();
+  }
+
+  /* ===== 記録（トップ3：秒 + 日時） ===== */
+  function makeRecord(gameKey){
+    const KEY = `game_record_${gameKey}_v1`;
+    function load(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        if(!raw) return [];
+        const arr = JSON.parse(raw);
+        if(!Array.isArray(arr)) return [];
+        return arr
+          .map(x => ({sec:Number(x.sec), ts:Number(x.ts)}))
+          .filter(x => Number.isFinite(x.sec) && Number.isFinite(x.ts));
+      }catch(e){ return []; }
+    }
+    function save(list){
+      try{
+        localStorage.setItem(KEY, JSON.stringify(list));
+      }catch(e){}
+    }
+    function clearAll(){
+      try{ localStorage.removeItem(KEY); }catch(e){}
+    }
+    function commit(sec){
+      const list = load();
+      list.push({sec:Number(sec), ts:Date.now()});
+      const top3 = clamp3Top(list);
+      save(top3);
+      return top3;
+    }
+    return {load, commit, clearAll};
+  }
+
+  function buildStatUI(recordObj){
+    const stat = h('div',{class:'statbox'},[]);
+    const row = h('div',{class:'statrow'},[]);
+    const timerLine = h('div',{class:'timerline'},[]);
+    const tl = h('span',{class:'tlabel', text:'経過：'});
+    const tv = h('span',{class:'tvalue', text:'0.00'});
+    const tu = h('span',{class:'tunit', text:'秒'});
+    timerLine.appendChild(tl);
+    timerLine.appendChild(tv);
+    timerLine.appendChild(tu);
+
+    const btns = h('div',{class:'rankbtns'},[]);
+    const btnReset = h('button',{class:'btn small ghost', text:'リセット'},[]);
+    const btnClear = h('button',{class:'btn small danger', text:'記録クリア'},[]);
+    btns.appendChild(btnReset);
+    btns.appendChild(btnClear);
+
+    row.appendChild(timerLine);
+    row.appendChild(btns);
+
+    const rank = h('div',{class:'rank'},[]);
+    const rt = h('div',{class:'ranktitle', text:'過去最短時間 上位3位（秒／日時）'});
+    rank.appendChild(rt);
+
+    function renderRank(){
+      const top3 = recordObj.load();
+      while(rank.children.length > 1) rank.removeChild(rank.lastChild);
+      for(let i=0;i<3;i++){
+        const it = top3[i];
+        const line = h('div',{class:'rankline'},[]);
+        if(it){
+          line.innerHTML = `<b>${i+1}位</b> <span>${it.sec.toFixed(2)} 秒</span> <span>${formatDateTime(it.ts)}</span>`;
+        }else{
+          line.innerHTML = `<b>${i+1}位</b> <span>--</span> <span>--</span>`;
+        }
+        rank.appendChild(line);
+      }
+    }
+
+    stat.appendChild(row);
+    stat.appendChild(rank);
+
+    let started=false;
+    let t0=0;
+    let timer=null;
+
+    function tick(){
+      if(!started) return;
+      const sec = (nowMs() - t0)/1000;
+      tv.textContent = sec.toFixed(2);
+    }
+    function start(){
+      started=true;
+      t0=nowMs();
+      if(timer) clearInterval(timer);
+      timer=setInterval(tick, 50);
+    }
+    function stop(){
+      if(timer){ clearInterval(timer); timer=null; }
+      tick();
+      return Number(tv.textContent);
+    }
+    function resetTimer(){
+      started=false;
+      if(timer){ clearInterval(timer); timer=null; }
+      tv.textContent='0.00';
+    }
+
+    btnClear.addEventListener('click', () => {
+      recordObj.clearAll();
+      renderRank();
+    });
+
+    return {stat, start, stop, resetTimer, renderRank, btnReset};
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  function buildMenu(){
+    const menu = h('div',{id:'menu'},[]);
+    const grid = h('div',{class:'grid'},[
+      card('クイズ豆知識５００','5カテゴリ×100問（合計500問）／ランダム出題','startTrivia'),
+      card('色探し反射力ゲーム','6色が毎タップで並び替え＆グラデーションで難化','startColor'),
+      card('数字探しゲーム','毎タップで数字の位置が変わる（1→10）','startNum'),
+      card('Ｗトランプ・同じものを探せ！','本物っぽい札をめくってペア探し','startTrump'),
+      cardCasino('破滅ポーカー','戻れません。勝つか、沈むか。','startPoker'),
+      cardCasino('丁半','サイコロで丁か半かを当てる','startChohan'),
+    ]);
+    const note = h('div',{class:'note', text:'※「閉じる」でカルテへ戻ります。'});
+    menu.appendChild(grid);
+    menu.appendChild(note);
+    return menu;
+
+    function card(title, desc, id){
+      const b = h('button',{class:'btn primary', id, text:'開始'});
+      return h('div',{class:'menu-card'},[
+        h('div',{class:'h', text:title}),
+        h('div',{class:'p', text:desc}),
+        b
+      ]);
+    }
+    function cardCasino(title, desc, id){
+      const b = h('button',{class:'btn casino-red', id, text:'開始'});
+      return h('div',{class:'menu-card'},[
+        h('div',{class:'h', text:title}),
+        h('div',{class:'p', text:desc}),
+        b
+      ]);
+    }
+  }
+
+  function bindMenuButtons(){
+    const t = document.getElementById('startTrivia');
+    const c = document.getElementById('startColor');
+    const n = document.getElementById('startNum');
+    const w = document.getElementById('startTrump');
+    const p = document.getElementById('startPoker');
+    const hbtn = document.getElementById('startChohan');
+
+    if(t) t.onclick = () => { location.assign(new URL('kuigo.html', location.href).href); };
+    if(c) c.onclick = gameColor;
+    if(n) n.onclick = gameNumbers;
+    if(w) w.onclick = gameWTrump;
+
+    if(p) p.onclick = () => { location.href = 'poker.html'; };
+    if(hbtn) hbtn.onclick = () => { location.href = 'chohan.html'; };
+  }
+
+  function toMenu(){
+    clear();
+    screen.appendChild(buildMenu());
+    bindMenuButtons();
+  }
+
+  // 起動
+  toMenu();
+
+  function gameHeader(titleText){
+    const left = h('div',{class:'game-title'},[
+      h('div',{text:titleText}),
+      h('div',{class:'badge', text:'タップだけ'})
+    ]);
+    const back = h('button',{class:'btn ghost', text:'戻る'});
+    back.addEventListener('click', toMenu);
+    return h('div',{class:'game-head'},[ left, back ]);
+  }
+
+  /* =========================================================
+     ① ためになる豆知識クイズ
+     5カテゴリ×100問（合計500問）／ランダム出題／順番記憶なし
+  ========================================================= */
+  const TRIVIA = [
+    {q:'お茶の渋みの正体は？', a:'主にカテキンです。'},
+    {q:'冷蔵庫で野菜が傷む原因は？', a:'乾燥と低温障害の両方。'},
+    {q:'台所の油汚れが落ちやすい温度は？', a:'ぬるま湯で溶けやすい。'},
+    {q:'米を研ぎすぎると？', a:'旨みまで落ちることがある。'},
+    {q:'洗濯で色移りを防ぐコツは？', a:'濃色と淡色を分ける。'},
+    {q:'乾電池を長持ちさせるには？', a:'高温を避けて保管。'},
+    {q:'アルミホイルの表裏は違う？', a:'用途はほぼ同じ。'},
+    {q:'野菜のアク抜きの目的は？', a:'苦味やえぐみを減らす。'},
+    {q:'氷が白くなるのは？', a:'空気や不純物が混じる。'},
+    {q:'パンの保存で冷蔵が不向きな理由は？', a:'でんぷんが固くなる。'},
+    {q:'スマホの充電で熱が良くないのは？', a:'電池の劣化が進む。'},
+    {q:'掃除は上から下の理由は？', a:'ホコリが落ちるから。'},
+    {q:'育児で泣き止まない時の基本は？', a:'安全確認→抱っこ。'},
+    {q:'赤ちゃんの体温は大人より？', a:'やや高めが普通。'},
+    {q:'ペットの水皿は何が大事？', a:'毎日洗って清潔に。'},
+    {q:'犬の散歩で注意する季節は？', a:'夏の路面熱。'},
+    {q:'猫が高所を好むのは？', a:'安全を感じやすい。'},
+    {q:'家電のホコリが危険な場所は？', a:'コンセント周り。'},
+    {q:'電子レンジの汚れ対策は？', a:'こまめに拭く。'},
+    {q:'カーテンの洗濯頻度は？', a:'季節ごとが目安。'},
+  ];
+
+  const TRIVIA_BANK = (() => {
+    const cats = [
+      {key:'お料理豆知識', label:'お料理豆知識'},
+      {key:'家庭生活豆知識', label:'家庭生活豆知識'},
+      {key:'育児豆知識', label:'育児豆知識'},
+      {key:'家電豆知識', label:'家電豆知識'},
+      {key:'ペット豆知識', label:'ペット豆知識'},
+    ];
+
+    const bank = {};
+    bank.main = TRIVIA.map((x, i) => ({cat: cats[i%cats.length].key, q:x.q, a:x.a}));
+
+    // 100×5に見立て（同一素材を混ぜてランダム感を出す）
+    for(const c of cats){
+      bank[c.key] = [];
+      for(let i=0;i<100;i++){
+        const src = bank.main[(Math.random()*bank.main.length)|0];
+        bank[c.key].push({cat:c.key, q:src.q, a:src.a});
+      }
+    }
+    bank.cats = cats;
+    return bank;
+  })();
+
+  function pickTrivia(){
+    const ck = TRIVIA_BANK.cats[(Math.random()*TRIVIA_BANK.cats.length)|0].key;
+    const arr = TRIVIA_BANK.bank[ck];
+    return arr[(Math.random()*arr.length)|0];
+  }
+
+  function gameTrivia(){
+    clear();
+    const head = gameHeader('クイズ豆知識５００');
+    const hint = h('div',{class:'hint', text:'ランダム出題（順番は記憶しません）。「次へ」で新しい問題。'});
+    const box = h('div',{class:'quiz-card'},[]);
+    const qEl = h('div',{class:'quiz-q', text:''});
+
+    const ansBox = h('div',{class:'answer-box'},[]);
+    const aEl = h('div',{class:'quiz-a', text:''});
+    const meta = h('div',{class:'quiz-meta', text:''});
+    ansBox.appendChild(aEl);
+    ansBox.appendChild(meta);
+
+    const row = h('div',{class:'rankbtns'},[]);
+    const btnNext = h('button',{class:'btn small primary', text:'次へ'});
+    const btnShow = h('button',{class:'btn small ghost', text:'答え'});
+    row.appendChild(btnNext);
+    row.appendChild(btnShow);
+
+    box.appendChild(qEl);
+    box.appendChild(row);
+    box.appendChild(ansBox);
+
+    screen.appendChild(head);
+    screen.appendChild(hint);
+    screen.appendChild(box);
+
+    function showNew(){
+      const it = pickTrivia();
+      qEl.textContent = it.q;
+      aEl.textContent = it.a;
+      meta.textContent = `カテゴリ：${it.cat}`;
+      ansBox.classList.remove('on');
+    }
+    btnNext.onclick = showNew;
+    btnShow.onclick = () => ansBox.classList.toggle('on');
+
+    showNew();
+  }
+
+  /* =========================================================
+     ② 色探し反射力ゲーム
+     - どれかタップで開始（タイマー開始）
+     - 正解で0.2秒×2点滅＆カウンタ増
+     - 10回成功で4回点滅＆停止（記録）
+     - リセットで停止へ
+     - オレンジ→黄色グラデ / 薄赤→薄ピンク
+  ========================================================= */
+  function gameColor(){
+    clear();
+    const rec = makeRecord('color');
+    const statUI = buildStatUI(rec);
+
+    const head = gameHeader('色探し反射力ゲーム');
+    const hint = h('div',{class:'hint', text:'停止中はどれかタップで開始。正解は点滅＋カウンタ。10回で停止＆記録。'});
+    const counter = h('div',{class:'color-counter'},[
+      h('span',{class:'label', text:'成功カウンタ　'}),
+      h('span',{class:'num', id:'ccnum', text:'00'}),
+      h('span',{class:'label', text:'/10回'})
+    ]);
+    const target = h('div',{class:'color-target', id:'target'},[]);
+    const grid = h('div',{class:'color-grid', id:'cgrid'},[]);
+
+    screen.appendChild(head);
+    screen.appendChild(statUI.stat);
+    screen.appendChild(counter);
+    screen.appendChild(target);
+    screen.appendChild(hint);
+    screen.appendChild(grid);
+
+    statUI.renderRank();
+
+    // 色セット（薄ブルー→鮮やかな黄色、薄赤→薄ピンク、オレンジ→黄色グラデ）
+    const COLORS = [
+      {name:'ピンク',  val:'#ff6aa2'},
+      {name:'水色',    val:'#3bb7ff'},
+      {name:'紫',      val:'#8b5cf6'},
+      {name:'黄',      val:'linear-gradient(135deg,#ffd54a,#ffea7a)'},
+      {name:'緑',      val:'#22c55e'},
+      {name:'薄ピンク',val:'#ffc1d1'}
+    ];
+
+    let running = false;
+    let success = 0;
+    let current = null;
+
+    const ccnum = document.getElementById('ccnum');
+    function setNum(n){
+      ccnum.textContent = String(n).padStart(2,'0');
+      ccnum.classList.remove('bump');
+      void ccnum.offsetWidth;
+      ccnum.classList.add('bump');
+    }
+
+    function applyColor(el, color){
+      if(color.val.startsWith('linear-gradient')){
+        el.style.background = color.val;
+      }else{
+        el.style.background = color.val;
+      }
+    }
+
+    function pickNext(){
+      current = COLORS[(Math.random()*COLORS.length)|0];
+      applyColor(target, current);
+
+      const opts = shuffle(COLORS.slice()).slice(0,6);
+      // 必ず含める
+      if(!opts.some(x=>x.name===current.name)){
+        opts[0] = current;
+        shuffle(opts);
+      }
+      grid.textContent='';
+      for(const c of opts){
+        const b = h('div',{class:'cbtn', 'data-name':c.name},[]);
+        applyColor(b, c);
+        b.addEventListener('click', () => onPick(c));
+        grid.appendChild(b);
+      }
+    }
+
+    function blink(el, times, dur=120){
+      return new Promise(resolve=>{
+        let i=0;
+        const t = setInterval(()=>{
+          el.style.filter = (i%2===0) ? 'brightness(1.35)' : '';
+          i++;
+          if(i >= times*2){
+            clearInterval(t);
+            el.style.filter='';
+            resolve();
+          }
+        }, dur);
+      });
+    }
+
+    function stopAndRecord(){
+      const sec = statUI.stop();
+      rec.commit(sec);
+      statUI.renderRank();
+    }
+
+    async function onPick(choice){
+      if(!running){
+        running=true;
+        success=0;
+        setNum(0);
+        statUI.resetTimer();
+        statUI.start();
+      }
+
+      const ok = (choice.name === current.name);
+
+      if(ok){
+        success++;
+        setNum(success);
+        await blink(target, 2, 100); // 0.2秒×2相当
+      }
+
+      pickNext();
+
+      if(success>=10){
+        // 4回点滅し停止
+        await blink(target, 4, 90);
+        running=false;
+        stopAndRecord();
+      }
+    }
+
+    statUI.btnReset.addEventListener('click', () => {
+      running=false;
+      success=0;
+      setNum(0);
+      statUI.resetTimer();
+      pickNext();
+    });
+
+    pickNext();
+  }
+
+  /* =========================================================
+     ③ 数字探しゲーム（数字を順に押す）
+     - 消さずに残す（薄くして選択済み）
+     - 並び替えは継続
+  ========================================================= */
+  function gameNumbers(){
+    clear();
+    const rec = makeRecord('numbers');
+    const statUI = buildStatUI(rec);
+
+    const head = gameHeader('数字探しゲーム');
+    const hint = h('div',{class:'hint', text:'1→10の順でタップ。タップ済みは薄く表示のまま残り、毎回並び替え。'});
+    const grid = h('div',{class:'num-grid', id:'ngrid'},[]);
+
+    screen.appendChild(head);
+    screen.appendChild(statUI.stat);
+    screen.appendChild(hint);
+    screen.appendChild(grid);
+
+    statUI.renderRank();
+
+    let running=false;
+    let next=1;
+    let buttons=[];
+
+    function build(){
+      grid.textContent='';
+      const nums = shuffle([...Array(10)].map((_,i)=>i+1));
+      buttons = nums.map(v=>{
+        const b = h('button',{class:'num', text:String(v)},[]);
+        b.addEventListener('click', ()=>tap(v,b));
+        grid.appendChild(b);
+        return b;
+      });
+    }
+
+    function reset(){
+      running=false;
+      next=1;
+      statUI.resetTimer();
+      build();
+    }
+
+    function tap(v, btn){
+      if(!running){
+        running=true;
+        statUI.start();
+      }
+      if(v !== next){
+        // 何もしない（失敗でも続行）
+        return;
+      }
+      btn.classList.add('done'); // 消さず薄く
+      next++;
+      // 並び替え
+      const nodes = Array.from(grid.children);
+      shuffle(nodes);
+      grid.textContent='';
+      nodes.forEach(n=>grid.appendChild(n));
+
+      if(next===11){
+        running=false;
+        const sec = statUI.stop();
+        rec.commit(sec);
+        statUI.renderRank();
+        celebrate();
+      }
+    }
+
+    statUI.btnReset.addEventListener('click', reset);
+    reset();
+  }
+
+  /* =========================================================
+     ④ Wトランプ（同じもの）
+  ========================================================= */
+  function gameWTrump(){
+    clear();
+    const rec = makeRecord('wtrump');
+    const statUI = buildStatUI(rec);
+
+    const head = gameHeader('Ｗトランプ・同じものを探せ！');
+    const hint = h('div',{class:'hint', text:'札をめくって同じ絵柄を当ててください（全ペアで終了＆記録）。'});
+    const grid = h('div',{class:'tr-grid', id:'trgrid'},[]);
+
+    screen.appendChild(head);
+    screen.appendChild(statUI.stat);
+    screen.appendChild(hint);
+    screen.appendChild(grid);
+
+    statUI.renderRank();
+
+    const suits = [
+      {s:'♠', cls:'tr-black'},
+      {s:'♥', cls:'tr-red'},
+      {s:'♦', cls:'tr-red'},
+      {s:'♣', cls:'tr-black'},
+    ];
+
+    const ranks = ['A','2','3','4','5','6','7','8'];
+    const deck = [];
+    for(let i=0;i<8;i++){
+      const su = suits[i%4];
+      deck.push({rank:ranks[i], suit:su.s, cls:su.cls, id:`${ranks[i]}${su.s}`});
+      deck.push({rank:ranks[i], suit:su.s, cls:su.cls, id:`${ranks[i]}${su.s}`});
+    }
+    shuffle(deck);
+
+    let running=false;
+    let opened=[];
+    let matched=0;
+
+    function buildCard(card, idx){
+      const el = h('div',{class:'tr-card back', 'data-idx':String(idx)},[]);
+      const mark = h('div',{class:'backmark', text:'W'});
+      el.appendChild(mark);
+      el.addEventListener('click', ()=>tap(idx));
+      return el;
+    }
+
+    function showFace(el, card){
+      el.classList.remove('back');
+      el.textContent='';
+      const face = h('div',{class:'tr-face'},[]);
+      const tl = h('div',{class:`tr-corner tl ${card.cls}`},[
+        h('div',{text:card.rank}),
+        h('div',{class:'tr-suit', text:card.suit})
+      ]);
+      const br = h('div',{class:`tr-corner br ${card.cls}`},[
+        h('div',{text:card.rank}),
+        h('div',{class:'tr-suit', text:card.suit})
+      ]);
+      const big = h('div',{class:`tr-big ${card.cls}`, text:card.suit});
+      face.appendChild(big);
+      el.appendChild(face);
+      el.appendChild(tl);
+      el.appendChild(br);
+    }
+
+    function hideBack(el){
+      el.className='tr-card back';
+      el.textContent='';
+      el.appendChild(h('div',{class:'backmark', text:'W'}));
+    }
+
+    function reset(){
+      running=false;
+      opened=[];
+      matched=0;
+      statUI.resetTimer();
+      shuffle(deck);
+      grid.textContent='';
+      deck.forEach((c,i)=>grid.appendChild(buildCard(c,i)));
+    }
+
+    function tap(idx){
+      const el = grid.querySelector(`[data-idx="${idx}"]`);
+      if(!el) return;
+      if(el.classList.contains('matched')) return;
+      if(opened.includes(idx)) return;
+      if(opened.length>=2) return;
+
+      if(!running){
+        running=true;
+        statUI.start();
+      }
+
+      showFace(el, deck[idx]);
+      opened.push(idx);
+
+      if(opened.length===2){
+        const [a,b] = opened;
+        const ca = deck[a], cb = deck[b];
+        if(ca.id===cb.id){
+          const ea = grid.querySelector(`[data-idx="${a}"]`);
+          const eb = grid.querySelector(`[data-idx="${b}"]`);
+          ea.classList.add('matched');
+          eb.classList.add('matched');
+          opened=[];
+          matched++;
+          if(matched===8){
+            running=false;
+            const sec = statUI.stop();
+            rec.commit(sec);
+            statUI.renderRank();
+            celebrate();
+          }
+        }else{
+          setTimeout(()=>{
+            const ea = grid.querySelector(`[data-idx="${a}"]`);
+            const eb = grid.querySelector(`[data-idx="${b}"]`);
+            hideBack(ea);
+            hideBack(eb);
+            opened=[];
+          }, 520);
+        }
+      }
+    }
+
+    statUI.btnReset.addEventListener('click', reset);
+    reset();
+  }
+
+})();
+</script>
+
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>介護福祉士 訓練｜制度・医療連携・事例</title>
+  <style>
+    :root{
+      --blue:#1e88e5; --bg:#eef6ff; --card:#fff; --txt:#0b1b2b; --muted:#4a5a6a; --border:#9cc7ff;
+      --blinkPink:#ff5aa5; --blinkBlue:#1f6fff;
+    }
+    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; background:var(--bg); color:var(--txt); }
+    .wrap{ max-width:900px; margin:0 auto; padding:14px; }
+    .bar{ background:#dcebff; border:2px solid var(--border); border-radius:14px; padding:12px; }
+    .title{ margin:0; font-size:18px; font-weight:900; }
+    .meta{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .card{ margin-top:12px; background:var(--card); border:2px solid var(--border); border-radius:14px; padding:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .qid{ font-weight:900; margin:0 0 8px; }
+    .qtext{ margin:0 0 10px; line-height:1.55; }
+    .opt{
+      padding:12px 12px;
+      border:2px solid #d5e8ff;
+      border-radius:12px;
+      margin:8px 0;
+      background:#fbfdff;
+      user-select:none;
+      cursor:pointer;
+      line-height:1.45;
+      font-weight:700;
+    }
+    .opt:active{ transform: translateY(1px); }
+    .opt .lead{ font-weight:900; margin-right:6px; }
+
+    .btns{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:2px solid var(--blue); background:#fff; color:var(--blue);
+      padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer;
+    }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.danger{ border-color:#d32f2f; color:#d32f2f; }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .progress{ margin-top:10px; height:10px; background:#dbeeff; border-radius:999px; overflow:hidden; border:1px solid #b8d8ff; }
+    .progress > div{ height:100%; width:0%; background:var(--blue); }
+
+    @keyframes blinkHalf { 0%{opacity:1;} 50%{opacity:.15;} 100%{opacity:1;} }
+    .blink-pink{ border-color:var(--blinkPink)!important; background:rgba(255,90,165,.14)!important; animation: blinkHalf 0.5s linear infinite; }
+    .blink-blue{ border-color:var(--blinkBlue)!important; background:rgba(31,111,255,.12)!important; animation: blinkHalf 0.5s linear infinite; }
+    .fast{ animation-duration: 0.25s !important; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="bar">
+      <p class="title" id="genreTitle"></p>
+      <p class="meta" id="meta"></p>
+      <div class="progress"><div id="pbar"></div></div>
+    </div>
+
+    <div class="card">
+      <p class="qid" id="qid"></p>
+      <p class="qtext" id="qtext"></p>
+      <div id="opts"></div>
+
+      <div class="btns">
+        <button onclick="prev()">戻る</button>
+        <button class="primary" id="nextBtn" onclick="next()" disabled>次へ</button>
+        <button onclick="goHome()">表紙へ</button>
+        <button class="danger" onclick="resetThis()">このジャンルをリセット</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const GENRE_ID = 5;
+  const GENRE_TITLE = "ジャンル5（制度・医療連携・事例）";
+  const OFFSET = 400;
+
+  const questions = [{"text":"介護保険制度で、要介護認定を行うのはどれか。","choices":["市町村","都道府県","国","事業所"],"answer":0},{"text":"ケアマネジャーの主な役割として適切なのはどれか。","choices":["診断を行う","ケアプランを作成し調整する","手術を行う","薬を処方する"],"answer":1},{"text":"サービス担当者会議の目的として適切なのはどれか。","choices":["利用者の悪口を共有する","多職種で支援方針を共有する","費用だけを決める","介護職だけで決める"],"answer":1},{"text":"成年後見制度の目的として適切なのはどれか。","choices":["財産を没収する","判断能力が不十分な人を支援する","介護保険を停止する","医療を拒否させる"],"answer":1},{"text":"緊急時の対応として適切なのはどれか。","choices":["異常があっても記録だけする","状態変化を確認し、必要時は上司・医療へ連絡する","家族だけに連絡して終える","自己判断で薬を増やす"],"answer":1},{"text":"服薬介助で適切なのはどれか。","choices":["自己判断で中止する","本人確認と飲み込み確認を行う","薬を砕くかは介護職が決める","他人の薬を分ける"],"answer":1},{"text":"感染症発生時の対応として適切なのはどれか。","choices":["標準予防策を徹底し必要に応じ隔離する","手洗いは不要","発熱者も集団活動に参加させる","換気はしない"],"answer":0},{"text":"地域包括支援センターの役割として適切なのはどれか。","choices":["要支援者への支援や相談対応","病院の入院手続きのみ","工事の許可","税務相談のみ"],"answer":0},{"text":"虐待が疑われる場合の対応として適切なのはどれか。","choices":["見て見ぬふりをする","記録し組織として相談・通報を検討する","本人のせいにする","SNSで告発する"],"answer":1},{"text":"個別援助計画の評価で適切なのはどれか。","choices":["目標達成度を確認し必要なら見直す","一度立てたら変更しない","評価は不要","職員の好みで変更する"],"answer":0},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1},{"text":"利用者が転倒した直後の対応として最も適切なのはどれか。","choices":["すぐ起こして歩かせる","痛み・意識・外傷を確認し必要時は連絡する","家族にだけ連絡する","記録せず片付ける"],"answer":1},{"text":"発熱がみられる利用者への対応として適切なのはどれか。","choices":["水分を制限する","体温・症状を観察し報告する","入浴させて汗をかかせる","何もしない"],"answer":1},{"text":"食事中に強いむせが続く利用者への対応として適切なのはどれか。","choices":["食事を続ける","中止し状態確認、必要なら医療へ連絡する","背中を強く叩き続ける","水を一気飲みさせる"],"answer":1},{"text":"脱水が疑われる利用者への対応として適切なのはどれか。","choices":["水分摂取を促し観察・報告する","利尿を促すためカフェインを勧める","食事だけで十分とする","暑い場所で運動させる"],"answer":0},{"text":"胸痛を訴える利用者への対応として適切なのはどれか。","choices":["様子見して放置する","安静にし緊急連絡を検討する","歩かせて気を紛らわす","水分を制限する"],"answer":1},{"text":"意識がもうろうとしている利用者への対応として適切なのはどれか。","choices":["食事を勧める","安全確保しバイタル確認、速やかに連絡する","一人にして寝かせる","入浴させる"],"answer":1},{"text":"利用者が興奮し暴力行為がみられる場合の対応として適切なのはどれか。","choices":["大声で言い返す","安全距離を取り刺激を減らし支援を求める","力で押さえつける","放置する"],"answer":1},{"text":"利用者の行方が分からない場合の対応として適切なのはどれか。","choices":["しばらく待つ","組織の手順に従い速やかに捜索・連絡する","記録だけする","翌日探す"],"answer":1},{"text":"褥瘡が悪化している可能性がある場合の対応として適切なのはどれか。","choices":["強くマッサージする","皮膚状態を記録し看護職等へ報告する","放置する","体位変換を減らす"],"answer":1},{"text":"食欲低下が続く利用者への対応として適切なのはどれか。","choices":["無理に食べさせる","原因（体調・口腔・薬等）を観察し相談する","食事は一律に中止する","叱責する"],"answer":1}];
+
+  const K_PROGRESS = `kai_progress_g${GENRE_ID}`;
+  const K_ANSWERS  = `kai_answers_g${GENRE_ID}`;
+  const K_STREAK   = `kai_wrongstreak_g${GENRE_ID}`;
+  const K_UPDATED  = `kai_updated_g${GENRE_ID}`;
+
+  function fmt3(n){ return String(n).padStart(3,"0"); }
+  function fmt4(n){ return String(n).padStart(4,"0"); }
+
+  let idx = 0;
+  let answers = new Array(100).fill(null);
+  let wrongStreak = new Array(100).fill(0);
+
+  function loadState(){
+    const p = Number(localStorage.getItem(K_PROGRESS));
+    if (Number.isFinite(p) && p >= 0 && p < 100) idx = p;
+
+    const a = localStorage.getItem(K_ANSWERS);
+    if (a){ try { const x = JSON.parse(a); if (Array.isArray(x) && x.length === 100) answers = x; } catch(e){} }
+
+    const s = localStorage.getItem(K_STREAK);
+    if (s){ try { const x = JSON.parse(s); if (Array.isArray(x) && x.length === 100) wrongStreak = x; } catch(e){} }
+  }
+
+  function saveState(){
+    localStorage.setItem(K_PROGRESS, String(idx));
+    localStorage.setItem(K_ANSWERS, JSON.stringify(answers));
+    localStorage.setItem(K_STREAK, JSON.stringify(wrongStreak));
+    localStorage.setItem(K_UPDATED, new Date().toLocaleString("ja-JP"));
+  }
+
+  function render(){
+    document.getElementById("genreTitle").textContent = GENRE_TITLE;
+
+    const globalNo = OFFSET + idx + 1;
+    const withinNo = idx + 1;
+
+    document.getElementById("qid").textContent =
+      `通し番号 ${fmt4(globalNo)} ／ ジャンル内 ${fmt3(withinNo)}（苦情用ID）`;
+
+    document.getElementById("qtext").textContent = questions[idx].text;
+
+    const answeredCount = answers.filter(v => v !== null).length;
+    document.getElementById("meta").innerHTML =
+      `進捗：<b>${withinNo}</b> / 100　回答済み：<b>${answeredCount}</b> / 100　（連続ミス：<b>${wrongStreak[idx]}</b>）`;
+
+    document.getElementById("pbar").style.width = `${Math.round((withinNo/100)*100)}%`;
+
+    const box = document.getElementById("opts");
+    box.innerHTML = "";
+
+    const picked = answers[idx];
+    const ans = questions[idx].answer;
+    const judged = (picked !== null);
+
+    document.getElementById("nextBtn").disabled = !judged;
+
+    const speedUp = (wrongStreak[idx] >= 2);
+
+    questions[idx].choices.forEach((c, i) => {
+      const div = document.createElement("div");
+      div.className = "opt";
+      div.innerHTML = `<span class="lead">${["A","B","C","D"][i]}.</span>${c}`;
+
+      if (judged){
+        if (picked === ans && i === picked) {
+          div.classList.add("blink-pink");
+          if (speedUp) div.classList.add("fast");
+        }
+        if (picked !== ans && i === ans) {
+          div.classList.add("blink-blue");
+          if (speedUp) div.classList.add("fast");
+        }
+      }
+
+      div.addEventListener("click", () => {
+        const chosen = i;
+        const correct = (chosen === ans);
+
+        answers[idx] = chosen;
+
+        if (correct) {
+          wrongStreak[idx] = 0;
+        } else {
+          wrongStreak[idx] = (wrongStreak[idx] || 0) + 1;
+        }
+
+        saveState();
+        render();
+      });
+
+      box.appendChild(div);
+    });
+
+    saveState();
+  }
+
+  function next(){ if (idx < 99){ idx++; render(); } else { alert("このジャンルは最後まで到達しました。表紙へ戻れます。"); } }
+  function prev(){ if (idx > 0){ idx--; render(); } }
+  function goHome(){ saveState(); location.href = "kai_home.html"; }
+
+  function resetThis(){
+    if(!confirm("このジャンルの進捗・回答・連続ミスを削除します。よろしいですか？")) return;
+    localStorage.removeItem(K_PROGRESS);
+    localStorage.removeItem(K_ANSWERS);
+    localStorage.removeItem(K_STREAK);
+    localStorage.removeItem(K_UPDATED);
+    idx = 0;
+    answers = new Array(100).fill(null);
+    wrongStreak = new Array(100).fill(0);
+    render();
+  }
+
+  loadState();
+  render();
+</script>
+</body>
+</html>

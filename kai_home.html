@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>介護福祉士 訓練（4択）</title>
+  <style>
+    :root{
+      --blue:#1e88e5; --bg:#eef6ff; --card:#fff; --txt:#0b1b2b; --muted:#4a5a6a; --border:#9cc7ff;
+    }
+    body{ margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", sans-serif; background:var(--bg); color:var(--txt); }
+    .wrap{ max-width:900px; margin:0 auto; padding:14px; }
+    .top{ background:linear-gradient(180deg,#dcebff 0%, #f6fbff 100%); border:2px solid var(--border); border-radius:14px; padding:14px 14px 10px; }
+    h1{ margin:0; font-size:20px; font-weight:900; }
+    .sub{ margin:6px 0 0; color:var(--muted); font-size:13px; line-height:1.5; }
+    .grid{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
+    @media (min-width:700px){ .grid{ grid-template-columns:1fr 1fr; } }
+    .card{ background:var(--card); border:2px solid var(--border); border-radius:14px; padding:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .name{ font-weight:900; font-size:16px; margin:0 0 6px; }
+    .meta{ color:var(--muted); font-size:13px; line-height:1.6; margin:0 0 10px; }
+    .btns{ display:flex; gap:8px; flex-wrap:wrap; }
+    button{ border:2px solid var(--blue); background:#fff; color:var(--blue); padding:10px 12px; border-radius:12px; font-weight:900; cursor:pointer; }
+    button.primary{ background:var(--blue); color:#fff; }
+    button.danger{ border-color:#d32f2f; color:#d32f2f; }
+    .footer{ margin-top:12px; color:var(--muted); font-size:12px; line-height:1.5; }
+    .small{ font-size:12px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>介護福祉士 訓練（4択・各100問）</h1>
+      <p class="sub">
+        ・タップで判定（正解：ピンク点滅／不正解：正解が青点滅）<br>
+        ・同じ問題を戻って答え直しOK（訓練用）<br>
+        ・同じ問題を2回連続で間違えたら点滅が倍速（0.25秒）<br>
+        ・途中で閉じても「続き」から再開（端末内保存）
+      </p>
+    </div>
+
+    <div class="grid" id="cards"></div>
+
+    <div class="card" style="margin-top:10px;">
+      <p class="name">管理</p>
+      <p class="meta">端末内の進捗・回答・連続ミスを一括リセット（全ジャンル）</p>
+      <div class="btns">
+        <button class="danger" onclick="resetAll()">全データをリセット</button>
+        <!-- ★追加：戻る -->
+        <button onclick="goBack()">戻る</button>
+      </div>
+      <p class="footer small">※保存は localStorage。端末やブラウザを変えると引き継げません。</p>
+    </div>
+
+    <p class="footer">このセットは「訓練用」。試験の気分は玄関に置いてきてOKです。</p>
+  </div>
+
+<script>
+  const genres = [
+    { id: 1, title: "ジャンル1（介護の基本）", file: "kai1.html", offset: 0 },
+    { id: 2, title: "ジャンル2（生活支援技術）", file: "kai2.html", offset: 100 },
+    { id: 3, title: "ジャンル3（こころとからだ）", file: "kai3.html", offset: 200 },
+    { id: 4, title: "ジャンル4（認知症・障害）", file: "kai4.html", offset: 300 },
+    { id: 5, title: "ジャンル5（制度・医療連携・事例）", file: "kai5.html", offset: 400 },
+  ];
+
+  function keyProgress(id){ return `kai_progress_g${id}`; }
+  function keyUpdated(id){ return `kai_updated_g${id}`; }
+
+  function fmt4(n){ return String(n).padStart(4,"0"); }
+
+  function getProgress(id){
+    const v = Number(localStorage.getItem(keyProgress(id)));
+    return Number.isFinite(v) ? v : 0;
+  }
+  function getUpdated(id){
+    return localStorage.getItem(keyUpdated(id)) || "";
+  }
+  function openGenre(file){ location.href = file; }
+
+  function resetAll(){
+    if(!confirm("全ジャンルの進捗・回答・連続ミスを削除します。よろしいですか？")) return;
+    for(const g of genres){
+      localStorage.removeItem(`kai_progress_g${g.id}`);
+      localStorage.removeItem(`kai_answers_g${g.id}`);
+      localStorage.removeItem(`kai_wrongstreak_g${g.id}`);
+      localStorage.removeItem(`kai_updated_g${g.id}`);
+    }
+    render();
+    alert("リセットしました。");
+  }
+
+  function goBack(){
+    location.href = "index.html";
+  }
+
+  function resetOne(id){
+    if(!confirm("このジャンルの進捗・回答・連続ミスを削除します。よろしいですか？")) return;
+    localStorage.removeItem(`kai_progress_g${id}`);
+    localStorage.removeItem(`kai_answers_g${id}`);
+    localStorage.removeItem(`kai_wrongstreak_g${id}`);
+    localStorage.removeItem(`kai_updated_g${id}`);
+    render();
+  }
+
+  function render(){
+    const cards = document.getElementById("cards");
+    cards.innerHTML = "";
+    for(const g of genres){
+      const idx = getProgress(g.id);
+      const updated = getUpdated(g.id);
+      const globalNo = g.offset + idx + 1;
+
+      const el = document.createElement("div");
+      el.className = "card";
+      el.innerHTML = `
+        <p class="name">${g.title}</p>
+        <p class="meta">
+          続き：<b>${idx+1}</b> / 100　（通し番号：<b>${fmt4(globalNo)}</b>）<br>
+          最終保存：${updated ? updated : "未保存"}
+        </p>
+        <div class="btns">
+          <button class="primary" onclick="openGenre('${g.file}')">開始／続き</button>
+          <button onclick="resetOne(${g.id})">このジャンルだけリセット</button>
+        </div>
+      `;
+      cards.appendChild(el);
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>

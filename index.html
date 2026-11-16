@@ -1,0 +1,1994 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ヘルメイト｜トレイン</title>
+
+    <style>
+        :root {
+          --accent-blue: #2f66c9;
+          --radius-xl: 26px;
+          --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.35);
+        }
+        * { box-sizing: border-box; }
+
+        body{
+          margin:0;
+          padding:24px 10px;
+          font-family: system-ui, -apple-system, "Noto Sans JP","Yu Gothic","メイリオ", sans-serif;
+          color:#111827;
+          background:
+            radial-gradient(140% 140% at 0% 0%, #ffe6f3 0, transparent 55%),
+            radial-gradient(140% 140% at 100% 0%, #ffd3ec 0, transparent 55%),
+            radial-gradient(160% 160% at 50% 100%, #ffd9ec 0, #f8b9d7 40%, #f193c1 85%);
+          min-height:100vh;
+          display:flex;
+          justify-content:center;
+        }
+
+        .outer-frame{
+          width:100%;
+          max-width:960px;
+          border-radius:var(--radius-xl);
+          padding:22px 18px 26px;
+          background: linear-gradient(145deg, #ffe8f4, #ffd4ec);
+          box-shadow: var(--shadow-soft);
+        }
+
+        .logo-header{
+          max-width:520px;
+          margin:0 auto 12px;
+          text-align:center;
+        }
+        .logo-header img{
+          max-width:100%;
+          height:auto;
+          display:block;
+          margin:0 auto;
+        }
+
+        /* 画像枠 */
+        .photo-frame{
+          max-width:520px;
+          margin:0 auto 12px;
+          width:100%;
+          aspect-ratio: 16/9;
+          border-radius:18px;
+          border:3px solid rgba(47,102,201,0.65);
+          background: rgba(255,255,255,0.85);
+          box-shadow: 0 10px 22px rgba(15,23,42,0.35);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          color:#334155;
+          font-weight:800;
+          overflow:hidden;
+          position:relative;
+          user-select:none;
+        }
+
+
+
+.photo-frame img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  border-radius:16px;
+
+  pointer-events:none;
+  -webkit-touch-callout:none;
+}
+
+
+
+        .photo-placeholder{
+          position:absolute;
+          inset:0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:10px 12px;
+          text-align:center;
+          font-weight:900;
+          color:#1f3b7a;
+          background: linear-gradient(135deg, rgba(255,255,255,0.75), rgba(224,242,254,0.55));
+          border-radius:16px;
+          pointer-events:none;
+          white-space: normal;
+          word-break: break-word;
+          line-height:1.35;
+        }
+
+        .employee-proof{
+          max-width:520px;
+          margin:0 auto 18px;
+          padding:6px 10px;
+          text-align:center;
+          font-weight:900;
+          font-size: clamp(10px, 1.8vw, 13px);
+          color:#fff;
+          background:#d60000;
+          border-radius:10px;
+          border:2px solid #a80000;
+          box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+          white-space: normal;
+          overflow: visible;
+          word-break: break-word;
+        }
+
+        .info-table-wrapper{
+          margin:0 auto 12px;
+          max-width:520px;
+          background: rgba(255,255,255,0.96);
+          border-radius:16px;
+          padding:8px 10px;
+          border:3px solid var(--accent-blue);
+          box-shadow: 0 10px 24px rgba(15, 23, 42, 0.5);
+        }
+        .info-table-wrapper-top{
+          border-width:4px;
+          border-color:#ff4f8a;
+          background: linear-gradient(135deg, #fff0f7, #ffe5f1);
+          margin-bottom:8px;
+        }
+        .info-table-wrapper-top th,
+        .info-table-wrapper-top td{
+          font-size:1rem;
+          font-weight:800;
+          border-width:3px;
+          border-color:#ff8ab4;
+        }
+
+        table{ width:100%; border-collapse:collapse; border:none; table-layout: fixed; }
+        th,td{
+          border:2px solid #f4c6de;
+          padding:6px;
+          font-size:.9rem;
+          white-space: normal;
+          overflow: visible;
+          word-break: break-word;
+        }
+
+        .info-table-wrapper tr:first-child th,
+        .info-table-wrapper tr:first-child td { border-top:none; }
+        .info-table-wrapper tr:last-child th,
+        .info-table-wrapper tr:last-child td { border-bottom:none; }
+        .info-table-wrapper tr th:first-child,
+        .info-table-wrapper tr td:first-child { border-left:none; }
+        .info-table-wrapper tr th:last-child,
+        .info-table-wrapper tr td:last-child { border-right:none; }
+
+        th{
+          width:36%;
+          background: linear-gradient(135deg, #ffe4f3, #ffd9ee);
+          color:#7b2948;
+          font-weight:600;
+          user-select:none;
+        }
+        td{
+          background:#fff;
+          color:#111827;
+        }
+        td.editable{
+          cursor:pointer;
+          user-select:none;
+        }
+        td.editable:active{
+          outline: 2px solid rgba(47,102,201,0.35);
+          outline-offset: 2px;
+          border-radius: 6px;
+        }
+
+        .rule-box{
+          max-width:520px;
+          margin:0 auto 14px;
+          border-radius:16px;
+          border:3px solid rgba(47,102,201,0.65);
+          background: linear-gradient(135deg, rgba(224,242,254,0.95), rgba(254,243,199,0.88));
+          box-shadow: 0 10px 22px rgba(15,23,42,0.35);
+          overflow:hidden;
+        }
+        .rule-box-head{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          padding:10px 12px;
+          border-bottom:1px solid rgba(47,102,201,0.25);
+          background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(224,242,254,0.65));
+          font-weight:900;
+          color:#1f3b7a;
+        }
+        .rule-badge{
+          flex:0 0 auto;
+          width:34px;
+          height:34px;
+          border-radius:10px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          background: radial-gradient(circle at 30% 25%, #bbf7d0, #60a5fa);
+          border:2px solid rgba(47,102,201,0.55);
+          box-shadow: 0 6px 12px rgba(0,0,0,0.18);
+          font-size:18px;
+        }
+        .rule-box-body{
+          padding:10px 12px 12px;
+          font-size:0.84rem;
+          line-height:1.6;
+          color:#0f172a;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+
+        .section-title{
+          max-width:520px;
+          margin:8px auto 4px;
+          font-weight:800;
+          color:#1f3b7a;
+        }
+        .one-touch-desc{
+          font-weight:500;
+          font-size:0.85rem;
+          margin-top:2px;
+          white-space: normal;
+          word-break: break-word;
+          line-height:1.4;
+        }
+
+        .main-switch-area{ margin:4px 0 16px; }
+        .main-switch-column{
+          max-width:520px;
+          margin:0 auto 8px;
+          display:flex;
+          flex-direction:column;
+          align-items:flex-start;
+          gap:8px;
+        }
+        .main-switch-row{
+          width:100%;
+          display:flex;
+          align-items:flex-start;
+          gap:10px;
+        }
+        .main-switch-help{
+          flex:1 1 auto;
+          font-size:0.82rem;
+          line-height:1.4;
+          color:#334155;
+          font-weight:600;
+          text-shadow:0 1px 2px rgba(255,255,255,0.6);
+          white-space: normal;
+          word-break: break-word;
+        }
+        .main-switch{
+          padding:10px 24px;
+          border-radius:999px;
+          border:none;
+          font-weight:800;
+          letter-spacing:.2em;
+          background: linear-gradient(120deg, #ff9fd3, #f9cf76, #7fb7ff);
+          cursor:pointer;
+          color:#2b143a;
+          box-shadow: 0 10px 22px rgba(0,0,0,0.45);
+          white-space: normal;
+          word-break: break-word;
+          font-size:0.9rem;
+          outline:1px solid #2f66c9;
+          outline-offset:0;
+          user-select:none;
+          flex:0 0 auto;
+          min-width: 165px;
+          max-width: 165px;
+        }
+        .main-switch:active{ transform: translateY(1px); }
+
+        .main-switch-blue{
+          background: linear-gradient(120deg, #7fb7ff, #a7d3ff, #e0f2fe);
+          color:#0b2a5a;
+        }
+
+        .app-grid{
+          max-width:520px;
+          margin:0 auto 18px;
+          display:grid;
+          grid-template-columns:repeat(3,1fr);
+          gap:8px;
+        }
+        .app-btn{
+          padding:10px 6px;
+          border-radius:12px;
+          border:none;
+          font-weight:700;
+          cursor:pointer;
+          color:#0f172a;
+          box-shadow: 0 4px 10px rgba(15,23,42,0.35);
+          outline:1px solid #2f66c9;
+          outline-offset:0;
+          user-select:none;
+          width:100%;
+          min-height: 56px;
+          white-space: normal;
+          word-break: break-word;
+          line-height:1.2;
+        }
+        .app-btn:active{ transform: translateY(1px); }
+        .app-btn:nth-child(1){ background: linear-gradient(135deg, #e0f2fe, #bae6fd); }
+        .app-btn:nth-child(2){ background: linear-gradient(135deg, #fee2e2, #fecaca); }
+        .app-btn:nth-child(3){ background: linear-gradient(135deg, #fef9c3, #fef3c7); }
+        .app-btn:nth-child(4){ background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+        .app-btn:nth-child(5){ background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+        .app-btn:nth-child(6){ background: linear-gradient(135deg, #fae8ff, #e9d5ff); }
+        .app-btn:nth-child(7){ background: linear-gradient(135deg, #ccfbf1, #a5f3fc); }
+        .app-btn:nth-child(8){ background: linear-gradient(135deg, #ffe4e6, #fecaca); }
+        .app-btn:nth-child(9){ background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .app-btn:nth-child(10){ background: linear-gradient(135deg, #e0f2fe, #bfdbfe); }
+        .app-btn:nth-child(11){ background: linear-gradient(135deg, #fee2e2, #fecaca); }
+        .app-btn:nth-child(12){ background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+
+        #btnCalc.rec-recording{
+          animation: recBlink 0.3s steps(2, end) infinite;
+          font-weight: 900;
+          letter-spacing: .08em;
+        }
+        @keyframes recBlink{
+          0%{ background:#ffffff; color:#b91c1c; }
+          50%{ background:#b91c1c; color:#ffffff; }
+          100%{ background:#ffffff; color:#b91c1c; }
+        }
+
+        .phone-slider-list{
+          max-width:520px;
+          margin:4px auto 14px;
+          display:flex;
+          flex-direction:column;
+          gap:10px;
+        }
+        .phone-lane{
+          position:relative;
+          border-radius:999px;
+          background: linear-gradient(90deg, #e0f2fe, #e5f6ff);
+          box-shadow: 0 6px 14px rgba(15,23,42,0.35);
+          overflow:hidden;
+          user-select:none;
+          padding: 8px 6px;
+          min-height: 72px;
+        }
+        .phone-lane-track{
+          position:absolute;
+          left:8px;
+          right:60px;
+          top:50%;
+          height:18px;
+          transform: translateY(-50%);
+          border-radius:999px;
+          background: linear-gradient(90deg, #dbeafe, #bfdbfe, #93c5fd);
+          opacity:0.9;
+          pointer-events:none;
+        }
+        .phone-handle{
+          position:absolute;
+          left:6px;
+          top:50%;
+          transform: translateY(-50%);
+          width:52%;
+          max-width:230px;
+          min-height:56px;
+          height:auto;
+          border-radius:999px;
+          background:#fff;
+          border:2px solid #60a5fa;
+          display:flex;
+          align-items:center;
+          justify-content:flex-start;
+          box-shadow:
+            0 4px 10px rgba(15,23,42,0.45),
+            0 0 0 2px rgba(255,255,255,0.9);
+          padding:8px 38px 8px 16px;
+          overflow: visible;
+          cursor:grab;
+          touch-action:none;
+        }
+        .phone-handle:active{ cursor:grabbing; }
+        .phone-handle::after{
+          content:"";
+          position:absolute;
+          right:10px;
+          top:50%;
+          transform: translateY(-50%);
+          width:0;height:0;
+          border-top:7px solid transparent;
+          border-bottom:7px solid transparent;
+          border-left:11px solid #e11d48;
+          pointer-events:none;
+        }
+        .phone-handle-text{
+          display:flex;
+          flex-direction:column;
+          justify-content:center;
+          gap:2px;
+          width:100%;
+          min-width:0;
+        }
+        .phone-handle-name{
+          font-size:0.95rem;
+          font-weight:800;
+          color:#1e3a8a;
+          line-height:1.2;
+          white-space: normal;
+          word-break: break-word;
+        }
+        .phone-handle-number{
+          font-size:0.8rem;
+          font-weight:600;
+          color:#4b5563;
+          line-height:1.2;
+          white-space: normal;
+          word-break: break-word;
+        }
+        .phone-goal{
+          position:absolute;
+          right:6px;
+          top:50%;
+          transform: translateY(-50%);
+          width:42px;height:42px;
+          border-radius:50%;
+          background: radial-gradient(circle at 30% 20%, #bbf7d0, #16a34a);
+          border:2px solid #15803d;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          box-shadow:
+            0 4px 12px rgba(22,163,74,0.7),
+            0 0 0 2px rgba(255,255,255,0.9);
+          pointer-events:none;
+        }
+        .phone-goal-icon{ font-size:1.4rem; color:#ecfdf5; }
+        .phone-goal.blink{ animation: blink 0.6s infinite; }
+        @keyframes blink{
+          0%,50%{ filter: brightness(1); }
+          50.01%,100%{ filter: brightness(1.7); }
+        }
+
+        .datetime-block{
+          max-width:520px;
+          margin:8px auto 16px;
+          padding:8px 10px;
+          display:flex;
+          gap:12px;
+          align-items:flex-start;
+          font-weight:700;
+          color:#1f2933;
+          text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+          font-size:0.9rem;
+          line-height:1.6;
+          background: rgba(255,255,255,0.9);
+          border-radius:10px;
+        }
+        .datetime-labels{ flex:0 0 auto; min-width:3em; }
+        .datetime-info{ flex:1 1 auto; font-weight:500; white-space: normal; word-break: break-word; }
+
+        .data-title{
+          max-width:520px;
+          margin:12px auto 8px;
+          padding:6px 10px;
+          font-size:1rem;
+          font-weight:900;
+          color:#fff;
+          text-align:center;
+          background: linear-gradient(135deg, #f97373, #facc15);
+          border-radius:999px;
+          box-shadow: 0 4px 10px rgba(148,27,92,0.5);
+          white-space: normal;
+          word-break: break-word;
+        }
+        .data-button-row{
+          max-width:520px;
+          margin:0 auto 8px;
+          display:flex;
+          gap:10px;
+          justify-content:center;
+        }
+        .data-btn{
+          flex:1 1 0;
+          padding:12px 8px;
+          border-radius:14px;
+          border:none;
+          font-weight:800;
+          cursor:pointer;
+          background: linear-gradient(135deg, #fee2e2, #fecaca);
+          color:#7f1d1d;
+          box-shadow: 0 4px 10px rgba(15,23,42,0.4);
+          letter-spacing:.15em;
+          white-space: normal;
+          word-break: break-word;
+          outline:1px solid #2f66c9;
+          outline-offset:0;
+          user-select:none;
+          min-height: 52px;
+        }
+        .data-btn:active{ transform: translateY(1px); }
+
+        .btn-blink {
+          animation: helmateBlink 0.3s steps(2, end) infinite;
+        }
+        @keyframes helmateBlink {
+          50% { opacity: 0.25; }
+        }
+
+        .last-save-box{
+          max-width:520px;
+          margin:4px auto 8px;
+          padding:6px 10px;
+          border-radius:10px;
+          border:2px solid #c4a484;
+          background:#fffaf0;
+          display:flex;
+          align-items:flex-start;
+          gap:8px;
+          font-size:0.85rem;
+          font-weight:600;
+          color:#4b3b2a;
+          white-space: normal;
+          word-break: break-word;
+        }
+        .last-save-label{ margin-right:0; white-space: normal; word-break: break-word; }
+        .last-save-value{ flex:1 1 auto; text-align:right; white-space: normal; word-break: break-word; }
+
+        .data-desc{
+          max-width:520px;
+          margin:4px auto 16px;
+          font-size:0.8rem;
+          line-height:1.6;
+          color:#43302b;
+          white-space: normal;
+          word-break: break-word;
+        }
+
+        .shopping-grid{
+          max-width:520px;
+          margin:0 auto 14px;
+          display:grid;
+          grid-template-columns:repeat(2,1fr);
+          gap:10px;
+        }
+        .shop-btn{
+          padding:10px 6px;
+          border-radius:14px;
+          border:none;
+          font-weight:700;
+          cursor:pointer;
+          background: linear-gradient(135deg, #b07b4a, #e0c6a4);
+          color:#2b1a12;
+          box-shadow: 0 4px 10px rgba(120,72,40,0.6);
+          outline:1px solid #7a4c2a;
+          outline-offset:0;
+          text-align:center;
+          white-space: normal;
+          word-break: break-word;
+          user-select:none;
+          min-height: 52px;
+        }
+        .shop-btn:active{ transform: translateY(1px); }
+
+        .terms-box{
+          max-width:520px;
+          width:100%;
+          margin:14px auto 6px;
+          background: rgba(255,255,255,0.92);
+          border-radius:14px;
+          border:2px solid var(--accent-blue);
+          box-shadow: 0 8px 18px rgba(15,23,42,0.35);
+          overflow:hidden;
+        }
+        .terms-title{
+          padding:10px 12px;
+          font-weight:900;
+          color:#1f3b7a;
+          background: linear-gradient(135deg, #e0f2fe, #fde68a);
+          border-bottom:1px solid rgba(47,102,201,0.35);
+          white-space: normal;
+          word-break: break-word;
+        }
+        .terms-body{
+          padding:12px 12px 14px;
+          font-size:0.82rem;
+          line-height:1.65;
+          color:#0f172a;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+
+        .toast{
+          position: fixed;
+          left: 50%;
+          bottom: 18px;
+          transform: translateX(-50%);
+          background: rgba(15,23,42,0.92);
+          color:#fff;
+          padding:10px 14px;
+          border-radius: 999px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+          opacity:0;
+          pointer-events:none;
+          transition: opacity .15s ease;
+          z-index: 9999;
+          max-width: 92vw;
+          white-space: normal;
+          overflow: visible;
+          word-break: break-word;
+          text-align:center;
+        }
+        .toast.show{ opacity:1; }
+
+        #restoreFile, #topSubImageFile, #memoImgFile{
+          display:none;
+        }
+
+        .pin-change-area{
+          max-width:520px;
+          margin: 6px auto 14px;
+          padding: 12px 12px 14px;
+          border-radius:16px;
+          border:3px solid rgba(47,102,201,0.75);
+          background: linear-gradient(135deg, rgba(224,242,254,0.96), rgba(191,219,254,0.85));
+          box-shadow: 0 10px 22px rgba(15,23,42,0.35);
+        }
+        .pin-change-title{
+          margin: 0 auto 10px;
+          padding: 6px 10px;
+          font-size: 1rem;
+          font-weight: 900;
+          color:#0b2a5a;
+          text-align:center;
+          background: linear-gradient(120deg, #7fb7ff, #a7d3ff, #e0f2fe);
+          border-radius:999px;
+          border:2px solid rgba(47,102,201,0.75);
+          box-shadow: 0 6px 14px rgba(15,23,42,0.25);
+          white-space: normal;
+          word-break: break-word;
+        }
+        .pin-change-area .display-window{
+          display:flex;
+          justify-content:space-between;
+          gap:8px;
+          padding: 12px 10px;
+          border-radius:14px;
+          background: rgba(255,255,255,0.96);
+          border:2px solid rgba(47,102,201,0.55);
+          box-shadow: inset 0 2px 8px rgba(15,23,42,0.08);
+          margin: 0 0 10px;
+        }
+        .pin-change-area .digit-box{
+          flex:1 1 0;
+          height:58px;
+          border-radius:12px;
+          background: linear-gradient(180deg, #ffffff, #f3f8ff);
+          border:2px solid rgba(47,102,201,0.35);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size: 1.6rem;
+          font-weight: 900;
+          color:#0b2a5a;
+        }
+        .pin-change-area .pin-msg{
+          min-height: 1.2em;
+          margin: 2px 0 10px;
+          text-align:center;
+          font-weight: 900;
+          color:#b91c1c;
+          text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+          white-space: normal;
+          word-break: break-word;
+        }
+        .pin-change-area .keypad-grid{
+          display:grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap:10px;
+        }
+        .pin-change-area .key-btn{
+          padding:14px 8px;
+          border:none;
+          border-radius:14px;
+          font-size: 1.2rem;
+          font-weight: 900;
+          cursor:pointer;
+          background: linear-gradient(135deg, #ffffff, #e0f2fe);
+          color:#0b2a5a;
+          box-shadow: 0 6px 14px rgba(15,23,42,0.28);
+          outline:1px solid rgba(47,102,201,0.7);
+          outline-offset:0;
+          user-select:none;
+          min-height:58px;
+          white-space: normal;
+          word-break: break-word;
+        }
+        .pin-change-area .key-btn:active{ transform: translateY(1px); }
+        .pin-change-area .key-btn.ok{
+          background: linear-gradient(135deg, #bbf7d0, #86efac);
+          color:#065f46;
+          outline:2px solid rgba(6,95,70,0.55);
+          font-size: 1.05rem;
+          letter-spacing: .08em;
+        }
+
+        .helmate-busy {
+          pointer-events: none;
+          filter: saturate(0.92);
+        }
+
+        .pin-hidden-input{
+          position:absolute;
+          left:-9999px;
+          top:auto;
+          width:1px;
+          height:1px;
+          opacity:0;
+          border:0;
+          padding:0;
+          margin:0;
+        }
+
+        .keypad-logos {
+          margin-top: 10px;
+          display: flex;
+          justify-content: center;
+          align-items: stretch;
+          gap: 0;
+          max-width: 360px;
+          width: 100%;
+        }
+        .keypad-logos img {
+          flex: 1 1 0;
+          width: 100%;
+          height: 120px;
+          object-fit: contain;
+          display: block;
+        }
+
+        /* ===== メモ帳モーダル ===== */
+        .modal-backdrop{
+          position: fixed;
+          inset: 0;
+          background: rgba(15,23,42,0.55);
+          display:none;
+          align-items:center;
+          justify-content:center;
+          z-index: 9998;
+          padding: 16px;
+        }
+        .modal-backdrop.show{ display:flex; }
+        .modal-card{
+          width: 100%;
+          max-width: 520px;
+          background: rgba(255,255,255,0.98);
+          border-radius: 18px;
+          border: 3px solid rgba(47,102,201,0.65);
+          box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+          overflow:hidden;
+        }
+        .modal-head{
+          padding: 10px 12px;
+          font-weight: 900;
+          color:#0b2a5a;
+          background: linear-gradient(135deg, #e0f2fe, #fde68a);
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 10px;
+        }
+        .modal-head .close-btn{
+          border:none;
+          border-radius: 999px;
+          padding: 8px 12px;
+          font-weight: 900;
+          cursor:pointer;
+          background: linear-gradient(135deg, #fee2e2, #fecaca);
+          color:#7f1d1d;
+          outline:1px solid rgba(47,102,201,0.65);
+        }
+        .modal-body{
+          padding: 12px;
+        }
+        .memo-tools{
+          display:flex;
+          gap: 10px;
+          align-items:center;
+          margin-bottom: 10px;
+        }
+        .memo-tool-btn{
+          flex: 0 0 auto;
+          border:none;
+          border-radius: 14px;
+          padding: 10px 10px;
+          font-weight: 900;
+          cursor:pointer;
+          background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+          color:#065f46;
+          outline:1px solid rgba(47,102,201,0.55);
+          box-shadow: 0 6px 14px rgba(15,23,42,0.18);
+        }
+        .memo-tool-btn.danger{
+          background: linear-gradient(135deg, #fee2e2, #fecaca);
+          color:#7f1d1d;
+        }
+        .memo-preview{
+          display:flex;
+          gap: 10px;
+          align-items:flex-start;
+          margin-bottom: 10px;
+        }
+        .memo-img{
+          width:80px;
+          height:80px;
+          border-radius: 14px;
+          border:2px solid rgba(47,102,201,0.45);
+          background: #fff;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          overflow:hidden;
+          flex: 0 0 auto;
+        }
+        .memo-img img{
+          width:100%;
+          height:100%;
+          object-fit: cover;
+          display:block;
+        }
+        .memo-textarea{
+          width: 100%;
+          min-height: 180px;
+          border-radius: 14px;
+          border:2px solid rgba(47,102,201,0.35);
+          padding: 10px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          outline: none;
+          resize: vertical;
+        }
+
+        /* ===== 再生モーダル ===== */
+        .play-list{
+          display:flex;
+          flex-direction:column;
+          gap: 10px;
+        }
+        .play-item{
+          border-radius: 14px;
+          border:2px solid rgba(47,102,201,0.35);
+          background: #fff;
+          padding: 10px;
+          display:flex;
+          align-items:center;
+          justify-content:space-between;
+          gap: 10px;
+        }
+        .play-name{
+          font-weight: 900;
+          color:#0b2a5a;
+          word-break: break-word;
+        }
+        .play-sub{
+          font-size: 0.82rem;
+          font-weight: 700;
+          color:#475569;
+          word-break: break-word;
+          margin-top: 2px;
+        }
+        .play-act{
+          flex: 0 0 auto;
+          border:none;
+          border-radius: 999px;
+          padding: 10px 12px;
+          font-weight: 900;
+          cursor:pointer;
+          background: linear-gradient(135deg, #bbf7d0, #86efac);
+          color:#065f46;
+          outline:1px solid rgba(47,102,201,0.55);
+          white-space: nowrap;
+        }
+        .play-refresh{
+          width:100%;
+          border:none;
+          border-radius: 14px;
+          padding: 10px 10px;
+          font-weight: 900;
+          cursor:pointer;
+          background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+          color:#0b2a5a;
+          outline:1px solid rgba(47,102,201,0.55);
+          margin-bottom: 10px;
+        }
+        .play-empty{
+          font-weight: 900;
+          color:#7f1d1d;
+          background: rgba(254,226,226,0.8);
+          border:2px solid rgba(239,68,68,0.35);
+          padding: 10px;
+          border-radius: 14px;
+          text-align:center;
+        }
+        .train-banner{position:relative;max-width:100%;margin:0 auto 12px;cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+        .train-banner img{display:block;width:100%;height:auto;border-radius:14px;box-shadow:0 6px 16px #a33a1866}
+        .train-banner-hint{position:absolute;bottom:4px;right:8px;background:#172a32c9;color:white;border-radius:10px;padding:3px 9px;font-size:12px}
+        .train-mirror{position:fixed;inset:0;z-index:99999;background:#070707;display:none;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+        .train-mirror.active{display:block}
+        .train-mirror video{width:100%;height:100%;object-fit:contain;transform:scaleX(-1);display:block}
+        .train-mirror-label{position:absolute;top:env(safe-area-inset-top, 10px);left:12px;right:12px;text-align:center;color:#fff;background:#0009;padding:9px;border-radius:10px;pointer-events:none}
+        .train-mirror-close{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:18px;padding:12px 24px;border:2px solid #fff;border-radius:14px;color:#fff;background:#263f6b}
+        .train-mirror-status{position:absolute;left:10%;right:10%;top:45%;text-align:center;color:white;font-size:17px;pointer-events:none}
+    </style>
+</head>
+
+<body>
+<div class="outer-frame">
+
+    <div id="trainBanner" class="train-banner" role="button" tabindex="0" aria-label="１秒長押しで手鏡を開く" title="１秒長押しで手鏡を開く">
+        <img id="trainBannerImage" src="train-christmas.png" alt="ヘルパーステーション トレイン（クリスマス看板）">
+        <div class="train-banner-hint">１秒長押しで手鏡を開く</div>
+    </div>
+
+    <!-- 上部画像（2秒長押しで差し替え） -->
+    <div id="topSubImageFrame" class="photo-frame" title="２秒押し続けると画像を設定（任意）">
+        <img id="topSubImage" src="" alt="上部画像">
+        <div id="topSubPlaceholder" class="photo-placeholder">２秒押し続けると画像を設定（任意）</div>
+    </div>
+    <input id="topSubImageFile" type="file" accept="image/*">
+
+    <div class="employee-proof">ヘルパーステーション トレイン｜試験版</div>
+
+    <div class="info-table-wrapper info-table-wrapper-top">
+        <table>
+            <tr><th>所属</th><td id="fixedAff">ヘルパーステーション トレイン</td></tr>
+            <tr><th>連絡先</th><td id="fixedAddr">（必要に応じて設定）</td></tr>
+            <tr><th>代表者</th><td id="repCell" class="editable" data-key="representative"></td></tr>
+        </table>
+    </div>
+
+    <div class="info-table-wrapper">
+        <table>
+            <tr><th>氏名</th><td class="editable" data-key="name"></td></tr>
+            <tr><th>年齢</th><td class="editable" data-key="age"></td></tr>
+            <tr><th>性別</th><td id="sexCell" class="editable" data-key="sex"></td></tr>
+            <tr><th>住所</th><td class="editable" data-key="address"></td></tr>
+            <tr><th>連絡先</th><td class="editable" data-key="contact"></td></tr>
+            <tr><th>備考</th><td class="editable" data-key="note"></td></tr>
+        </table>
+    </div>
+
+    <div class="rule-box">
+        <div class="rule-box-head">
+            <div class="rule-badge">⏱</div>
+            <div>変更方法（２秒ルール）</div>
+        </div>
+        <div class="rule-box-body">このアプリ内の文字・画像表示は固定表示以外は変更が可能です。画像の変更は２秒押し続けると画像選択画面が表示されスマホ内の画像データを選択し貼る事ができます。文字は２秒押すと文字入力画面が出て変更が可能です。数字は基本的には小文字入力です。
+            ※２秒押しても変更画面にならない表示は固定です。</div>
+    </div>
+
+    <div class="section-title">
+        <div style="font-weight: 900;">メイン機能</div>
+    </div>
+
+    <div class="main-switch-area">
+        <div class="main-switch-column">
+            <div class="main-switch-row">
+                <button id="btnUserList" class="main-switch">ユーザーリスト</button>
+                <div class="main-switch-help">個人名のリストです。ここでカルテを選択します</div>
+            </div>
+            <div class="main-switch-row">
+                <button id="btnWeek" class="main-switch">スケジュール／週</button>
+                <div class="main-switch-help">1週間分のスケジュールを管理します。前後一年分を記憶します</div>
+            </div>
+            <div class="main-switch-row">
+                <button id="btnMonth" class="main-switch">スケジュール／月</button>
+                <div class="main-switch-help">一か月分のスケジュールを管理します。前後十年分を記憶します。</div>
+            </div>
+            <div class="main-switch-row">
+                <button id="btnGame" class="main-switch">ヒマつぶしゲーム</button>
+                <div class="main-switch-help">短いゲームで気分転換します。</div>
+            </div>
+            <div class="main-switch-row">
+                <button id="btnKai" class="main-switch main-switch-blue">介護士資格問題集</button>
+                <div class="main-switch-help">訓練用の４択問題集（kai_home.html）を開きます。</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-title">
+        <div style="font-weight: 900;">便利アプリボタン</div>
+        <div class="one-touch-desc">スマホのアイコンと同じ使い方です。</div>
+    </div>
+
+    <div class="app-grid">
+        <button id="btnMemo" class="app-btn" data-open="">メモ帳</button>
+        <button id="btnCalc" class="app-btn" data-open="">録音</button>
+        <button id="btnLine" class="app-btn" data-open="https://www.tiktok.com/">Tiktok</button>
+        <button class="app-btn" data-open="https://www.yahoo.co.jp/">ヤフー</button>
+        <button class="app-btn" data-open="https://www.cmoa.jp/">コミックシーモア</button>
+        <button class="app-btn" data-open="https://ebookjapan.yahoo.co.jp/">イーブックジャパン</button>
+        <button class="app-btn" data-open="https://www.rakuten.co.jp/">楽天</button>
+        <button class="app-btn" data-open="https://www.amazon.co.jp/">アマゾン</button>
+        <button class="app-btn" data-open="https://www.youtube.com/">youtube</button>
+        <button id="btnPlay" class="app-btn" data-open="">再生</button>
+        <button class="app-btn" data-open="https://mail.google.com/">Ｇ－ＭＡＩＬ</button>
+        <button class="app-btn" data-open="https://maps.google.com/">グーぐるマップ</button>
+    </div>
+
+    <div class="section-title">
+        <div style="font-weight: 900;">ワンタッチ電話</div>
+        <div class="one-touch-desc">
+            電話したい相手のボタンを右へ動かします。右端に移動したら丸い電話マークが点滅し電話画面へ切り替わり電話がかけられます。名前や電話番号を追加・書き換えする時はボタンを２秒押し続けて下さい。記入画面が表示されます。
+        </div>
+    </div>
+
+    <div id="phoneList" class="phone-slider-list"></div>
+
+    <div class="section-title">
+        <div style="font-weight: 900;">お買い物情報（大分市版）</div>
+        <div class="one-touch-desc">今日のチラシが表示されます。</div>
+    </div>
+
+    <div class="shopping-grid">
+        <button class="shop-btn" data-open="https://www.aeon.com/store/">イオン</button>
+        <button class="shop-btn" data-open="https://www.sunlive.co.jp/shop/#oita">丸食</button>
+        <button class="shop-btn" data-open="https://www.trial-net.co.jp/">トライアル</button>
+        <button class="shop-btn" data-open="https://shinsen.marumiya-store.co.jp/shops">新鮮市場</button>
+    </div>
+
+    <div class="datetime-block">
+        <div class="datetime-labels">
+            <div>日時</div>
+            <div>今日の天気</div>
+        </div>
+        <div class="datetime-info">
+            <div id="nowText">—</div>
+            <div id="weatherText">—</div>
+        </div>
+    </div>
+
+    <div class="data-title">バックアップ用全データ一括記録／復活</div>
+    <div class="data-button-row">
+        <button id="btnBackup" class="data-btn">データ記録</button>
+        <button id="btnRestore" class="data-btn">データ復活</button>
+    </div>
+
+    <div class="last-save-box">
+        <span class="last-save-label">最後の記憶日時</span>
+        <span id="lastSave" class="last-save-value">未記録</span>
+    </div>
+
+    <div class="data-desc">２秒長押しでデータ記録（JSONファイル保存）／データ復活（JSONファイル読み込み）。復元は現在の記録を上書きします。</div>
+
+    <div class="terms-box">
+        <div class="terms-title">ご利用について・ご利用規約</div>
+        <div id="termsBody" class="terms-body">ヘルメイト／トレイン試験版（無償・非商用）。
+このアプリはブラウザ内に情報を保存します。端末やブラウザのデータ削除で記録が消える場合があります。
+本試験版にはアプリ独自の暗証番号・暗号化・アクセス制御はありません。端末のロックだけで情報の安全を保証するものではありません。
+試験中は架空の利用者情報のみを使用し、実際の氏名、住所、病歴、連絡先、写真などを入力しないでください。
+録音など一部の旧Androidアプリ専用機能はブラウザ版では利用できない場合があります。
+重要な記録は「データ記録」でファイルに保存し、復元の動作も確認してください。</div>
+    </div>
+
+    <div id="trainMirror" class="train-mirror" role="dialog" aria-label="手鏡" aria-hidden="true">
+        <video id="trainMirrorVideo" autoplay playsinline muted></video>
+        <div class="train-mirror-label">手鏡　｜　１秒長押しで戻る</div>
+        <button type="button" id="trainMirrorClose" class="train-mirror-close">戻る</button>
+        <div id="trainMirrorStatus" class="train-mirror-status"></div>
+    </div>
+    <div id="toast" class="toast"></div>
+
+    <input id="restoreFile" type="file" accept="application/json">
+
+    <div class="keypad-logos">
+        <img src="helmate.jpg" alt="helmate1">
+        <img src="hel.jpg" alt="hel">
+        <img src="nikaido-logo.jpg" alt="nikaido-logo">
+    </div>
+
+    <!-- ===== メモ帳モーダル ===== -->
+    <div id="memoModal" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div>メモ帳</div>
+                <button id="memoClose" class="close-btn">閉じる</button>
+            </div>
+            <div class="modal-body">
+                <div class="memo-tools">
+                    <button id="memoPickImg" class="memo-tool-btn">画像</button>
+                    <button id="memoClear" class="memo-tool-btn danger">消す</button>
+                </div>
+                <div class="memo-preview">
+                    <div class="memo-img" id="memoImgBox">画像</div>
+                    <textarea id="memoText" class="memo-textarea" placeholder="ここにメモ"></textarea>
+                </div>
+                <input id="memoImgFile" type="file" accept="image/*">
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 再生モーダル ===== -->
+    <div id="playModal" class="modal-backdrop" aria-hidden="true">
+        <div class="modal-card">
+            <div class="modal-head">
+                <div>再生（録音一覧）</div>
+                <button id="playClose" class="close-btn">閉じる</button>
+            </div>
+            <div class="modal-body">
+                <button id="playRefresh" class="play-refresh">一覧更新</button>
+                <div id="playBody" class="play-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ====== 基本ユーティリティ ====== */
+        function isFn(x){ return typeof x === "function"; }
+        function toast(msg){
+          const el = document.getElementById("toast");
+          if(!el) return;
+          el.textContent = msg;
+          el.classList.add("show");
+          clearTimeout(el._t);
+          el._t = setTimeout(() => el.classList.remove("show"), 1800);
+        }
+
+        /* 2秒長押し */
+        function longPress(el, ms, onFire){
+          let t = null;
+          let fired = false;
+
+          const clear = () => { if(t){ clearTimeout(t); t=null; } };
+          const cancel = () => { clear(); };
+
+          el.addEventListener("pointerdown", (e) => {
+            fired = false;
+            clear();
+            t = setTimeout(() => { fired = true; onFire(); }, ms);
+          });
+
+          ["pointerup","pointercancel","pointerleave","pointerout"].forEach(ev => {
+            el.addEventListener(ev, cancel);
+          });
+
+          el.addEventListener("click", (e) => {
+            if(fired){
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }, true);
+        }
+
+        /* APK Bridge 呼び出し（MainActivity.kt の AndroidBridge に統一） */
+        async function callBridge(name, ...args){
+          try{
+            if(!window.AndroidBridge) return null;
+            const fn = window.AndroidBridge[name];
+            if(!isFn(fn)) return null;
+            const r = fn.apply(window.AndroidBridge, args);
+            if(r && typeof r.then === "function") return await r;
+            return r;
+          }catch(e){
+            return null;
+          }
+        }
+
+        /* 実行中制御 */
+        const outerFrame = document.querySelector(".outer-frame");
+        function setBusy(isBusy){
+          if(!outerFrame) return;
+          if(isBusy) outerFrame.classList.add("helmate-busy");
+          else outerFrame.classList.remove("helmate-busy");
+        }
+        function startBlink(btn){ if(btn) btn.classList.add("btn-blink"); }
+        function stopBlink(btn){ if(btn) btn.classList.remove("btn-blink"); }
+
+        /* localStorage */
+        function loadValue(key, def=""){
+          try{
+            const v = localStorage.getItem("hyo_" + key);
+            return (v === null || v === undefined) ? def : v;
+          }catch(e){
+            return def;
+          }
+        }
+        function saveValue(key, val){
+          try{ localStorage.setItem("hyo_" + key, val); }catch(e){}
+        }
+
+        /* ====== 日時 ====== */
+        const nowText = document.getElementById("nowText");
+        function tick(){
+          const d = new Date();
+          const y = d.getFullYear();
+          const m = String(d.getMonth()+1).padStart(2,"0");
+          const dd = String(d.getDate()).padStart(2,"0");
+          const hh = String(d.getHours()).padStart(2,"0");
+          const mm = String(d.getMinutes()).padStart(2,"0");
+          if(nowText) nowText.textContent = `${y}年${m}月${dd}日　${hh}時${mm}分`;
+        }
+        tick();
+        setInterval(tick, 30000);
+
+        /* ====== 天気（ネット取得） ====== */
+        const weatherText = document.getElementById("weatherText");
+        function isFiniteNumber(x){ return typeof x === "number" && Number.isFinite(x); }
+        function escapeHtml(str){
+          return String(str)
+            .replaceAll("&","&amp;")
+            .replaceAll("<","&lt;")
+            .replaceAll(">","&gt;")
+            .replaceAll('"',"&quot;")
+            .replaceAll("'","&#39;");
+        }
+        function weatherCodeToJa(code){
+          const map = {
+            0:"快晴",1:"晴れ",2:"晴れ時々曇り",3:"曇り",
+            45:"霧",48:"着氷性の霧",
+            51:"霧雨（弱）",53:"霧雨（中）",55:"霧雨（強）",
+            61:"雨（弱）",63:"雨（中）",65:"雨（強）",
+            71:"雪（弱）",73:"雪（中）",75:"雪（強）",
+            80:"にわか雨（弱）",81:"にわか雨（中）",82:"にわか雨（強）",
+            95:"雷雨",96:"雷雨（雹）",99:"雷雨（強い雹）"
+          };
+          return (code in map) ? map[code] : "不明";
+        }
+        async function fetchTodayWeather(){
+          try{
+            const LAT = 33.2396;
+            const LON = 131.6093;
+            const url =
+              "https://api.open-meteo.com/v1/forecast" +
+              "?latitude=" + LAT +
+              "&longitude=" + LON +
+              "&daily=weathercode,temperature_2m_max,temperature_2m_min" +
+              "&timezone=Asia%2FTokyo";
+            const res = await fetch(url, {cache:"no-store"});
+            if(!res.ok) throw new Error("HTTP " + res.status);
+            const j = await res.json();
+            const code = j?.daily?.weathercode?.[0];
+            const tmax = j?.daily?.temperature_2m_max?.[0];
+            const tmin = j?.daily?.temperature_2m_min?.[0];
+            const s = weatherCodeToJa(code);
+            const tempText =
+              (isFiniteNumber(tmin) && isFiniteNumber(tmax))
+                ? `${Math.round(tmin)}℃ ～ ${Math.round(tmax)}℃`
+                : "取得できません";
+            if(weatherText){
+              weatherText.innerHTML =
+                `今日の予想天気：${escapeHtml(s)}<br>` +
+                `今日の予想気温：${escapeHtml(tempText)}`;
+            }
+          }catch(e){
+            if(weatherText){
+              weatherText.innerHTML =
+                "今日の予想天気：取得できません<br>" +
+                "今日の予想気温：取得できません";
+            }
+          }
+        }
+        fetchTodayWeather();
+
+        /* ====== 文字編集（2秒） ====== */
+        document.querySelectorAll("td.editable").forEach(td => {
+          const key = td.dataset.key;
+          if(!key) return;
+          td.textContent = loadValue(key, "");
+        });
+
+        const sexCell = document.getElementById("sexCell");
+        if(sexCell){
+          if(!sexCell.textContent) sexCell.textContent = loadValue("sex", "不明");
+        }
+        const repCell = document.getElementById("repCell");
+        if(repCell && !repCell.textContent) repCell.textContent = loadValue("representative", "");
+
+        document.querySelectorAll("td.editable").forEach(td => {
+          const key = td.dataset.key;
+          if(!key) return;
+
+          if(key === "sex"){
+            longPress(td, 2000, () => {
+              const cur = (td.textContent || "不明").trim();
+              const order = ["男性","女性","不明"];
+              const next = order[(order.indexOf(cur)+1+order.length)%order.length];
+              td.textContent = next;
+              saveValue("sex", next);
+              toast("性別を変更しました");
+            });
+            return;
+          }
+
+          longPress(td, 2000, () => {
+            const cur = td.textContent || "";
+            const v = prompt("入力してください", cur);
+            if(v === null) return;
+            td.textContent = v;
+            saveValue(key, v);
+            toast("保存しました");
+          });
+        });
+
+        /* ====== 上部画像（Helmate.pngの直下） 2秒で変更 ====== */
+        (function(){
+          const frame = document.getElementById("topSubImageFrame");
+          const img   = document.getElementById("topSubImage");
+          const file  = document.getElementById("topSubImageFile");
+          const ph    = document.getElementById("topSubPlaceholder");
+          if(!frame || !img) return;
+
+          frame.addEventListener("contextmenu", function(e){
+            e.preventDefault();
+            return false;
+          });
+          frame.style.webkitTouchCallout = "none";
+          frame.style.webkitUserSelect = "none";
+          frame.style.userSelect = "none";
+
+          function showPlaceholder(on){
+            if(ph) ph.style.display = on ? "flex" : "none";
+            img.style.display = on ? "none" : "block";
+          }
+
+          function loadTopSub(){
+            const uri  = loadValue("topSubImageUri", "");
+            const data = loadValue("topSubImage", "");
+            const src = (uri && String(uri).trim()) ? uri : (data || "");
+            if(src){
+              img.src = src;
+              showPlaceholder(false);
+            }else{
+              img.removeAttribute("src");
+              showPlaceholder(true);
+            }
+          }
+
+          img.addEventListener("error", ()=>{
+            saveValue("topSubImageUri", "");
+            saveValue("topSubImage", "");
+            img.removeAttribute("src");
+            showPlaceholder(true);
+            toast("画像が表示できません");
+          });
+
+          window.onTopSubImagePicked = function(uriStr){
+            try{
+              if(!uriStr) return;
+              saveValue("topSubImageUri", String(uriStr));
+              saveValue("topSubImage", "");
+              loadTopSub();
+              toast("上部画像を保存しました");
+            }catch(e){}
+          };
+
+          function fileToDataURL(f){
+            return new Promise((resolve,reject)=>{
+              const r = new FileReader();
+              r.onload = ()=> resolve(r.result);
+              r.onerror = reject;
+              r.readAsDataURL(f);
+            });
+          }
+
+          loadTopSub();
+
+          longPress(frame, 2000, async () => {
+            const r = await callBridge("pickImage", "top");
+            if(r !== null){
+              return;
+            }
+            if(file) file.click();
+          });
+
+          if(file){
+            file.addEventListener("change", async ()=>{
+              const f = file.files && file.files[0];
+              if(!f) return;
+              const dataUrl = await fileToDataURL(f);
+              saveValue("topSubImage", dataUrl);
+              saveValue("topSubImageUri", "");
+              loadTopSub();
+              toast("上部画像を保存しました");
+              file.value = "";
+            });
+          }
+
+          window.addEventListener("helmate_refresh_topsub", ()=>{ loadTopSub(); });
+        })();
+
+        /* ====== メイン機能 ====== */
+        document.getElementById("btnUserList")?.addEventListener("click", ()=> location.href="risu.html");
+        document.getElementById("btnWeek")?.addEventListener("click", ()=> location.href="syu.html");
+        document.getElementById("btnMonth")?.addEventListener("click", ()=> location.href="getu.html");
+        document.getElementById("btnGame")?.addEventListener("click", ()=> location.href="game.html");
+        document.getElementById("btnKai")?.addEventListener("click", ()=> location.href="kai_home.html");
+
+        /* ====== 外部URL（全部 AndroidBridge.openExternal に統一） ====== */
+        function openExternal(url){
+          try{
+            if(window.AndroidBridge && typeof AndroidBridge.openExternal === "function"){
+              AndroidBridge.openExternal(url);
+              return;
+            }
+            location.href = url;
+          }catch(e){}
+        }
+
+        document.querySelectorAll(".app-btn").forEach(btn=>{
+          const open = btn.dataset.open;
+          if(btn.id === "btnMemo" || btn.id === "btnCalc" || btn.id === "btnPlay") return;
+          if(!open) return;
+          btn.addEventListener("click", ()=> openExternal(open));
+        });
+
+        document.querySelectorAll(".shop-btn").forEach(btn=>{
+          const open = btn.dataset.open;
+          if(!open) return;
+          btn.addEventListener("click", ()=> openExternal(open));
+        });
+
+        /* ====== 録音（APK側の AndroidBridge.startRecording/stopRecording） ====== */
+        const btnRec = document.getElementById("btnCalc");
+        let isRecording = false;
+        let recTimeout = null;
+
+        function setRecUi(on){
+          if(!btnRec) return;
+          if(on){
+            btnRec.textContent = "録音中";
+            btnRec.classList.add("rec-recording");
+          }else{
+            btnRec.textContent = "録音";
+            btnRec.classList.remove("rec-recording");
+          }
+        }
+
+        async function startRec(){
+          const r = await callBridge("startRecording");
+          if(r === null){
+            toast("録音機能はAPK側で有効化が必要です");
+            return false;
+          }
+          if(String(r).startsWith("NG:")){
+            toast("録音開始できません");
+            return false;
+          }
+          isRecording = true;
+          setRecUi(true);
+
+          clearTimeout(recTimeout);
+          recTimeout = setTimeout(() => { stopRec(); }, 60 * 60 * 1000);
+
+          toast("録音開始");
+          return true;
+        }
+
+        async function stopRec(){
+          const r = await callBridge("stopRecording");
+          isRecording = false;
+          clearTimeout(recTimeout);
+          recTimeout = null;
+          setRecUi(false);
+
+          if(r === null) toast("録音停止（APK側未実装の可能性）");
+          else toast("録音停止");
+          return true;
+        }
+
+        if(btnRec){
+          longPress(btnRec, 1000, () => {
+            if(isRecording) stopRec();
+            else startRec();
+          });
+          btnRec.addEventListener("click", () => {
+            if(!isRecording) toast("１秒押し続けると録音します");
+          });
+          setRecUi(false);
+        }
+
+        /* ====== メモ帳（内蔵） ====== */
+        (function(){
+          const btn = document.getElementById("btnMemo");
+          const modal = document.getElementById("memoModal");
+          const closeBtn = document.getElementById("memoClose");
+          const clearBtn = document.getElementById("memoClear");
+          const pickBtn = document.getElementById("memoPickImg");
+          const textEl = document.getElementById("memoText");
+          const imgBox = document.getElementById("memoImgBox");
+          const fileEl = document.getElementById("memoImgFile");
+
+          function setImg(dataUrl){
+            if(!imgBox) return;
+            if(!dataUrl){
+              imgBox.innerHTML = "画像";
+              return;
+            }
+            const img = document.createElement("img");
+            img.src = dataUrl;
+            imgBox.innerHTML = "";
+            imgBox.appendChild(img);
+          }
+
+          function load(){
+            const t = loadValue("memo_text", "");
+            const img = loadValue("memo_img", "");
+            if(textEl) textEl.value = t;
+            setImg(img);
+          }
+
+          function save(){
+            if(textEl) saveValue("memo_text", String(textEl.value || ""));
+          }
+
+          async function fileToDataURL(f){
+            return new Promise((resolve,reject)=>{
+              const r = new FileReader();
+              r.onload = ()=> resolve(r.result);
+              r.onerror = reject;
+              r.readAsDataURL(f);
+            });
+          }
+
+          function open(){
+            load();
+            if(modal){ modal.classList.add("show"); modal.setAttribute("aria-hidden","false"); }
+          }
+          function close(){
+            save();
+            if(modal){ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); }
+          }
+
+          if(btn) btn.addEventListener("click", open);
+          if(closeBtn) closeBtn.addEventListener("click", close);
+          if(modal) modal.addEventListener("click", (e)=>{ if(e.target === modal) close(); });
+
+          if(textEl){
+            textEl.addEventListener("input", ()=>{ save(); });
+          }
+
+          if(clearBtn){
+            clearBtn.addEventListener("click", ()=>{
+              if(textEl) textEl.value = "";
+              saveValue("memo_text","");
+              saveValue("memo_img","");
+              setImg("");
+              toast("メモを消しました");
+            });
+          }
+
+          if(pickBtn){
+            pickBtn.addEventListener("click", ()=>{
+              if(fileEl) fileEl.click();
+            });
+          }
+
+          if(fileEl){
+            fileEl.addEventListener("change", async ()=>{
+              const f = fileEl.files && fileEl.files[0];
+              if(!f) return;
+              const dataUrl = await fileToDataURL(f);
+              saveValue("memo_img", String(dataUrl));
+              setImg(String(dataUrl));
+              toast("画像を保存しました");
+              fileEl.value = "";
+            });
+          }
+        })();
+
+        /* ====== 再生（録音一覧→選択→再生） ====== */
+        (function(){
+          const btn = document.getElementById("btnPlay");
+          const modal = document.getElementById("playModal");
+          const closeBtn = document.getElementById("playClose");
+          const refreshBtn = document.getElementById("playRefresh");
+          const body = document.getElementById("playBody");
+
+          async function stopPlayback(){
+            await callBridge("stopAudio");
+          }
+
+          function open(){
+            if(modal){ modal.classList.add("show"); modal.setAttribute("aria-hidden","false"); }
+            refresh();
+          }
+
+          async function close(){
+            await stopPlayback();
+            if(modal){ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true"); }
+          }
+
+          function renderEmpty(msg){
+            if(!body) return;
+            body.innerHTML = "";
+            const div = document.createElement("div");
+            div.className = "play-empty";
+            div.textContent = msg;
+            body.appendChild(div);
+          }
+
+          function renderList(list){
+            if(!body) return;
+            body.innerHTML = "";
+            if(!list || !list.length){
+              renderEmpty("録音がありません");
+              return;
+            }
+            list.forEach(item=>{
+              const row = document.createElement("div");
+              row.className = "play-item";
+
+              const left = document.createElement("div");
+              left.style.flex = "1 1 auto";
+              left.style.minWidth = "0";
+
+              const name = document.createElement("div");
+              name.className = "play-name";
+              name.textContent = item?.name || "録音";
+
+              const sub = document.createElement("div");
+              sub.className = "play-sub";
+              sub.textContent = item?.date || "";
+
+              left.appendChild(name);
+              left.appendChild(sub);
+
+              const act = document.createElement("button");
+              act.className = "play-act";
+              act.textContent = "再生";
+              act.addEventListener("click", async ()=>{
+                const uri = item?.uri || "";
+                if(!uri){
+                  toast("再生できません");
+                  return;
+                }
+                const r = await callBridge("playAudio", String(uri));
+                if(r === null){
+                  openExternal(String(uri));
+                  return;
+                }
+              });
+
+              row.appendChild(left);
+              row.appendChild(act);
+              body.appendChild(row);
+            });
+          }
+
+          async function refresh(){
+            if(!window.AndroidBridge){
+              renderEmpty("再生はAPKで有効になります");
+              return;
+            }
+            const r = await callBridge("listRecordings");
+            if(r === null){
+              renderEmpty("再生機能が未追加です");
+              return;
+            }
+            try{
+              const j = JSON.parse(String(r));
+              renderList(j);
+            }catch(e){
+              renderEmpty("一覧取得に失敗しました");
+            }
+          }
+
+          if(btn) btn.addEventListener("click", open);
+          if(closeBtn) closeBtn.addEventListener("click", close);
+          if(refreshBtn) refreshBtn.addEventListener("click", refresh);
+
+          if(modal) modal.addEventListener("click", (e)=>{ if(e.target === modal) close(); });
+
+          document.addEventListener("visibilitychange", ()=>{ if(document.hidden) stopPlayback(); });
+          window.addEventListener("pagehide", ()=>{ stopPlayback(); });
+        })();
+
+        /* ====== ワンタッチ電話 ====== */
+        const phoneList = document.getElementById("phoneList");
+        const PHONE_COUNT = 8;
+
+        function getPhoneItem(i){
+          const name = loadValue("phone_name_" + i, "未登録");
+          const num  = loadValue("phone_num_"  + i, "");
+          return {name, num};
+        }
+        function setPhoneItem(i, name, num){
+          saveValue("phone_name_" + i, name);
+          saveValue("phone_num_"  + i, num);
+        }
+
+        function renderPhoneList(){
+          if(!phoneList) return;
+          phoneList.innerHTML = "";
+          for(let i=0;i<PHONE_COUNT;i++){
+            const lane = document.createElement("div");
+            lane.className = "phone-lane";
+
+            const track = document.createElement("div");
+            track.className = "phone-lane-track";
+
+            const handle = document.createElement("div");
+            handle.className = "phone-handle";
+            handle.setAttribute("data-i", String(i));
+
+            const t = document.createElement("div");
+            t.className = "phone-handle-text";
+
+            const nm = document.createElement("div");
+            nm.className = "phone-handle-name";
+            const it = getPhoneItem(i);
+            nm.textContent = it.name;
+
+            const nu = document.createElement("div");
+            nu.className = "phone-handle-number";
+            nu.textContent = it.num;
+
+            t.appendChild(nm);
+            t.appendChild(nu);
+            handle.appendChild(t);
+
+            const goal = document.createElement("div");
+            goal.className = "phone-goal";
+            const gi = document.createElement("div");
+            gi.className = "phone-goal-icon";
+            gi.textContent = "☎";
+            goal.appendChild(gi);
+
+            lane.appendChild(track);
+            lane.appendChild(handle);
+            lane.appendChild(goal);
+            phoneList.appendChild(lane);
+
+            setupPhoneHandle(lane, handle, goal, i);
+          }
+        }
+
+        function setupPhoneHandle(lane, handle, goal, i){
+          let startX = 0;
+          let startLeft = 0;
+          let dragging = false;
+
+          longPress(handle, 2000, ()=>{
+            const it = getPhoneItem(i);
+            const name = prompt("名前", it.name);
+            if(name === null) return;
+            const num = prompt("電話番号", it.num);
+            if(num === null) return;
+            setPhoneItem(i, name, num);
+            renderPhoneList();
+            toast("保存しました");
+          });
+
+          handle.addEventListener("pointerdown", (e)=>{
+            dragging = true;
+            handle.setPointerCapture(e.pointerId);
+            startX = e.clientX;
+            const rect = handle.getBoundingClientRect();
+            const laneRect = lane.getBoundingClientRect();
+            startLeft = rect.left - laneRect.left;
+            handle.style.transition = "none";
+          });
+
+          handle.addEventListener("pointermove", (e)=>{
+            if(!dragging) return;
+            const dx = e.clientX - startX;
+            const laneRect = lane.getBoundingClientRect();
+            const goalRight = 6 + 42;
+            const maxLeft = laneRect.width - handle.offsetWidth - goalRight;
+            const minLeft = 6;
+            let left = startLeft + dx;
+            if(left < minLeft) left = minLeft;
+            if(left > maxLeft) left = maxLeft;
+            handle.style.left = left + "px";
+
+            if(left >= maxLeft - 6) goal.classList.add("blink");
+            else goal.classList.remove("blink");
+          });
+
+          handle.addEventListener("pointerup", ()=>{
+            if(!dragging) return;
+            dragging = false;
+            handle.style.transition = "left 0.15s ease";
+
+            const laneRect = lane.getBoundingClientRect();
+            const goalRight = 6 + 42;
+            const maxLeft = laneRect.width - handle.offsetWidth - goalRight;
+
+            const left = parseFloat(handle.style.left || "6");
+            const it = getPhoneItem(i);
+
+            if(left >= maxLeft - 6){
+              if(it.num && it.num.trim()){
+                goal.classList.add("blink");
+                setTimeout(()=> goal.classList.remove("blink"), 800);
+                location.href = "tel:" + it.num.trim();
+              }else{
+                toast("電話番号が未登録です（２秒押して登録）");
+              }
+            }
+
+            handle.style.left = "6px";
+          });
+
+          handle.addEventListener("pointercancel", ()=>{
+            dragging = false;
+            handle.style.transition = "left 0.15s ease";
+            handle.style.left = "6px";
+            goal.classList.remove("blink");
+          });
+        }
+        renderPhoneList();
+
+        /* ====== データ記録／復活（JSON 1本） ====== */
+        const btnBackup  = document.getElementById("btnBackup");
+        const btnRestore = document.getElementById("btnRestore");
+        const lastSave   = document.getElementById("lastSave");
+        const restoreFile= document.getElementById("restoreFile");
+
+        function collectAllLocalStorage(){
+          const obj = {};
+          try{
+            for(let i=0;i<localStorage.length;i++){
+              const k = localStorage.key(i);
+              obj[k] = localStorage.getItem(k);
+            }
+          }catch(e){}
+          return obj;
+        }
+
+        function restoreAllLocalStorage(obj){
+          try{
+            localStorage.clear();
+            for(const k in obj){
+              localStorage.setItem(k, obj[k]);
+            }
+          }catch(e){}
+        }
+
+        function setLastSaveNow(){
+          const d = new Date();
+          const y = d.getFullYear();
+          const m = String(d.getMonth()+1).padStart(2,"0");
+          const dd = String(d.getDate()).padStart(2,"0");
+          const hh = String(d.getHours()).padStart(2,"0");
+          const mm = String(d.getMinutes()).padStart(2,"0");
+          const ss = String(d.getSeconds()).padStart(2,"0");
+          const txt = `${y}/${m}/${dd} ${hh}:${mm}:${ss}`;
+          try{ localStorage.setItem("hyo_last_save", txt); }catch(e){}
+          if(lastSave) lastSave.textContent = txt;
+        }
+        try{
+          const v = localStorage.getItem("hyo_last_save");
+          if(v && lastSave) lastSave.textContent = v;
+        }catch(e){}
+
+        if(btnBackup){
+          longPress(btnBackup, 2000, async ()=>{
+            setBusy(true);
+            startBlink(btnBackup);
+            try{
+              const data = collectAllLocalStorage();
+              const filename = "helmate_backup.json";
+              const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json;charset=utf-8"});
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = filename;
+              document.body.appendChild(a); a.click(); a.remove();
+              setTimeout(()=>URL.revokeObjectURL(url), 30000);
+              setLastSaveNow();
+              toast("保存ファイルのダウンロードを開始しました");
+            }catch(e){
+              toast("記録に失敗しました");
+            }finally{
+              stopBlink(btnBackup);
+              setBusy(false);
+            }
+          });
+        }
+
+        if(btnRestore){
+          longPress(btnRestore, 2000, ()=>{
+            startBlink(btnRestore);
+            try{
+              if(restoreFile) restoreFile.click();
+            }catch(e){
+              toast("復活に失敗しました");
+              stopBlink(btnRestore);
+            }
+          });
+        }
+
+        if(restoreFile){
+          restoreFile.addEventListener("change", async ()=>{
+            const file = restoreFile.files && restoreFile.files[0];
+            if(!file){
+              stopBlink(btnRestore);
+              return;
+            }
+            setBusy(true);
+            startBlink(btnRestore);
+            try{
+              const txt = await file.text();
+              const obj = JSON.parse(txt);
+              if(!obj || typeof obj !== "object" || Array.isArray(obj) ||
+                 !Object.values(obj).every(v => typeof v === "string")) throw new Error("不正な形式");
+              if(!confirm("現在の保存データを消去し、選択したファイルで復元します。よろしいですか？")) return;
+              restoreAllLocalStorage(obj);
+
+              document.querySelectorAll("td.editable").forEach(td=>{
+                const key = td.dataset.key;
+                if(!key) return;
+                td.textContent = loadValue(key, "");
+              });
+              if(sexCell) sexCell.textContent = loadValue("sex", "不明");
+              if(repCell) repCell.textContent = loadValue("representative", "");
+
+              try{ window.dispatchEvent(new Event("helmate_refresh_topsub")); }catch(e){}
+              renderPhoneList();
+
+              toast("データを復活しました");
+            }catch(e){
+              toast("復活ファイルが読めません");
+            }finally{
+              stopBlink(btnRestore);
+              setBusy(false);
+              restoreFile.value = "";
+            }
+          });
+        }
+    </script>
+
+</div>
+
+<script>
+(()=>{
+  const banner=document.getElementById('trainBanner');
+  const overlay=document.getElementById('trainMirror');
+  const video=document.getElementById('trainMirrorVideo');
+  const close=document.getElementById('trainMirrorClose');
+  const status=document.getElementById('trainMirrorStatus');
+  let stream=null, busy=false, timer=null, startX=0, startY=0;
+  async function openMirror(){
+    if(busy||overlay.classList.contains('active'))return;
+    busy=true; overlay.classList.add('active'); overlay.setAttribute('aria-hidden','false');
+    status.textContent='内カメラを準備しています…';
+    try{
+      if(!navigator.mediaDevices?.getUserMedia) throw Error('この環境ではカメラを利用できません。HTTPSで開いてください。');
+      try{stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'user'},width:{ideal:4096},height:{ideal:3072}}});}
+      catch(e){stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user'}});}
+      video.srcObject=stream; await video.play(); status.textContent='';
+    }catch(e){status.textContent='カメラを起動できません。カメラの許可とHTTPS接続を確認してください。';}
+    finally{busy=false;}
+  }
+  function closeMirror(){
+    if(timer){clearTimeout(timer);timer=null;}
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    video.pause();video.srcObject=null;overlay.classList.remove('active');overlay.setAttribute('aria-hidden','true');status.textContent='';
+  }
+  function hold(el, action){
+    el.addEventListener('pointerdown',e=>{
+      if(e.button!==0||e.target===close)return;
+      clearTimeout(timer);startX=e.clientX;startY=e.clientY;
+      timer=setTimeout(()=>{timer=null;action();},1000);
+    });
+    el.addEventListener('pointermove',e=>{
+      if(Math.abs(e.clientX-startX)>15||Math.abs(e.clientY-startY)>15){clearTimeout(timer);timer=null;}
+    });
+    for(const ev of ['pointerup','pointercancel','pointerleave'])el.addEventListener(ev,()=>{clearTimeout(timer);timer=null;});
+    el.addEventListener('contextmenu',e=>e.preventDefault());
+  }
+  hold(banner,openMirror);hold(overlay,closeMirror);
+  close.addEventListener('click',e=>{e.stopPropagation();closeMirror();});
+  window.addEventListener('pagehide',closeMirror);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)closeMirror();});
+  banner.addEventListener('keydown',e=>{if(e.key==='Enter'){openMirror();}});
+  const seasonal={christmas:'train-christmas.png',normal:'train-normal.svg'};
+  const now=new Date();
+  document.getElementById('trainBannerImage').src=(now.getMonth()===11)?seasonal.christmas:seasonal.normal;
+})();
+</script>
+</body>
+</html>

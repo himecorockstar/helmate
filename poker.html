@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>一人用ドローポーカー（CPU対戦）</title>
+<style>
+  :root{
+    --bg0:#03150c;
+    --bg1:#062b18;
+    --felt:#0c5a34;
+    --felt2:#0a4a2b;
+
+    --gold:#ffd34d;
+    --gold2:#ffef9a;
+    --ink:#0b0b10;
+
+    --btn:#1b2a25;
+    --btn2:#0f1b16;
+
+    --danger:#ff2b2b;
+    --ok:#00ff66;
+
+    --cardW:68px;
+    --cardH:98px;
+
+    --shadow: 0 16px 28px rgba(0,0,0,.40);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    background:
+      radial-gradient(1200px 700px at 50% 0%, rgba(255,220,120,.10), transparent 55%),
+      radial-gradient(900px 600px at 25% 75%, rgba(0,255,120,.10), transparent 55%),
+      linear-gradient(180deg, var(--bg0), var(--bg1));
+    color:#fff;
+    font-family: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  }
+  .app{
+    width:min(980px, 96vw);
+    padding:12px 10px 18px;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin:6px 0 10px;
+  }
+  .title{
+    font-weight:900;
+    letter-spacing:.10em;
+    text-shadow: 0 0 18px rgba(255,210,80,.18);
+    font-size:18px;
+  }
+  .stats{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+  .pill{
+    background:rgba(0,0,0,.35);
+    border:2px solid rgba(255,210,80,.22);
+    border-radius:999px;
+    padding:6px 10px;
+    font-weight:800;
+    font-size:13px;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.35);
+  }
+  .pill b{ color: var(--gold2); }
+
+  .board{
+    position:relative;
+    background:
+      radial-gradient(1200px 600px at 50% 0%, rgba(255,255,255,.10), transparent 60%),
+      linear-gradient(135deg, var(--felt), var(--felt2));
+    border-radius:22px;
+    padding:12px;
+    box-shadow: var(--shadow);
+    border:6px solid rgba(0,0,0,.40);
+    overflow:hidden;
+  }
+  .board::before{
+    content:"";
+    position:absolute; inset:10px;
+    border-radius:16px;
+    border:5px solid rgba(255,210,80,.16);
+    pointer-events:none;
+  }
+  .board::after{
+    content:"";
+    position:absolute; inset:-40px;
+    background:
+      radial-gradient(closest-side at 20% 25%, rgba(255,40,40,.12), transparent 60%),
+      radial-gradient(closest-side at 80% 30%, rgba(255,240,0,.10), transparent 62%),
+      radial-gradient(closest-side at 60% 85%, rgba(0,190,255,.09), transparent 60%),
+      repeating-linear-gradient(120deg, rgba(255,255,255,.06) 0 7px, rgba(255,255,255,0) 7px 22px);
+    opacity:.55;
+    mix-blend-mode: screen;
+    pointer-events:none;
+    animation: sweep .9s linear infinite;
+  }
+  @keyframes sweep{
+    from{ transform: translateX(-14px) translateY(12px); }
+    to{ transform: translateX(14px) translateY(-12px); }
+  }
+
+  .rowhead{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    padding:4px 6px 8px;
+    gap:10px;
+  }
+  .rowhead .who{
+    font-weight:900;
+    letter-spacing:.08em;
+    font-size:14px;
+    opacity:.95;
+  }
+  .rowhead .role{
+    font-size:13px;
+    opacity:.90;
+    font-weight:800;
+  }
+  .role .tag{
+    display:inline-block;
+    padding:2px 8px;
+    border-radius:999px;
+    border:2px solid rgba(255,210,80,.25);
+    background: rgba(0,0,0,.25);
+    margin-left:6px;
+  }
+
+  .cards{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:6px 6px 12px;
+    flex-wrap:wrap;
+  }
+
+  .card{
+    width:var(--cardW);
+    height:var(--cardH);
+    border-radius:12px;
+    background: rgba(0,0,0,.25);
+    border:3px solid rgba(0,0,0,.35);
+    box-shadow: 0 10px 16px rgba(0,0,0,.30);
+    position:relative;
+    overflow:hidden;
+    cursor:pointer;
+    user-select:none;
+    transform: translateZ(0);
+    transition: transform .10s ease, outline .10s ease, filter .10s ease;
+  }
+  .card img{
+    width:100%;
+    height:100%;
+    display:block;
+  }
+  .card:active{ transform: translateY(1px) scale(.995); }
+
+  .card.hold{
+    outline:4px solid var(--gold);
+    filter: brightness(1.06);
+    transform: translateY(-3px);
+  }
+  .holdbadge{
+    position:absolute;
+    left:6px; bottom:6px;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.12em;
+    color:#111;
+    background: var(--gold2);
+    border:2px solid rgba(0,0,0,.25);
+    padding:2px 6px;
+    border-radius:999px;
+    display:none;
+  }
+  .card.hold .holdbadge{ display:block; }
+
+  .controls{
+    display:grid;
+    grid-template-columns: 1fr;
+    gap:10px;
+    margin-top:10px;
+  }
+
+  .panel{
+    background: rgba(0,0,0,.28);
+    border:2px solid rgba(255,210,80,.18);
+    border-radius:16px;
+    padding:10px;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.35);
+  }
+
+  .btnrow{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  button{
+    border:none;
+    border-radius:14px;
+    padding:10px 14px;
+    font-weight:900;
+    letter-spacing:.06em;
+    color:#fff;
+    background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)), rgba(0,0,0,.35);
+    border:2px solid rgba(255,210,80,.22);
+    box-shadow: 0 10px 16px rgba(0,0,0,.22), inset 0 0 0 2px rgba(0,0,0,.35);
+    cursor:pointer;
+  }
+  button:active{ transform: translateY(1px); }
+  button[disabled]{ opacity:.45; cursor:not-allowed; }
+
+  .betbtn{
+    background:
+      radial-gradient(140px 60px at 30% 35%, rgba(255,255,255,.55), transparent 60%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 2px, rgba(0,0,0,0) 2px 9px),
+      linear-gradient(180deg, #efe6cc, #d8cfb1);
+    color:#121218;
+    border-color: rgba(0,0,0,.25);
+    text-shadow:none;
+  }
+  .betbtn.active{
+    outline:3px solid var(--gold);
+    box-shadow: 0 0 18px rgba(255,210,80,.22), 0 10px 16px rgba(0,0,0,.22);
+  }
+  .dealbtn{ background: linear-gradient(135deg, #ffb700, #ffd400); color:#201400; border-color: rgba(0,0,0,.25); }
+  .drawbtn{ background: linear-gradient(135deg, #ff2b2b, #b10f18); }
+  .resetbtn{ background: linear-gradient(135deg, #0bb84a, #00ff66); color:#001b08; border-color: rgba(0,0,0,.25); }
+
+  .difficulty{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-top:6px;
+  }
+  .diffbtn{
+    padding:8px 12px;
+    border-radius:999px;
+    font-size:13px;
+  }
+  .diffbtn.active{
+    outline:3px solid rgba(0,190,255,.85);
+    box-shadow: 0 0 18px rgba(0,190,255,.18);
+  }
+
+  .msg{
+    text-align:center;
+    font-weight:900;
+    letter-spacing:.06em;
+    font-size:16px;
+    margin-top:8px;
+    text-shadow: 0 0 14px rgba(0,0,0,.55);
+  }
+  .submsg{
+    text-align:center;
+    font-size:13px;
+    opacity:.92;
+    margin-top:4px;
+  }
+
+  /* 勝利演出（勝ちだけ派手） */
+  .fxwin{
+    position:absolute; inset:0;
+    pointer-events:none;
+    opacity:0;
+    transition: opacity .12s ease;
+  }
+  .fxwin.on{ opacity:1; }
+  .fxwin::before{
+    content:"";
+    position:absolute; inset:-40px;
+    background:
+      radial-gradient(closest-side at 25% 25%, rgba(255,240,140,.22), transparent 60%),
+      radial-gradient(closest-side at 70% 30%, rgba(255,210,80,.18), transparent 62%),
+      radial-gradient(closest-side at 55% 82%, rgba(0,255,120,.14), transparent 60%),
+      repeating-linear-gradient(120deg, rgba(255,255,255,.16) 0 7px, rgba(255,255,255,0) 7px 22px);
+    mix-blend-mode: screen;
+    animation: fxmove .28s linear infinite;
+  }
+  @keyframes fxmove{
+    from{ transform: translateX(-16px) translateY(12px); }
+    to{ transform: translateX(16px) translateY(-12px); }
+  }
+
+  /* 連勝バッジ */
+  .streak{
+    display:inline-block;
+    margin-left:8px;
+    padding:2px 10px;
+    border-radius:999px;
+    background: rgba(0,0,0,.35);
+    border:2px solid rgba(255,210,80,.25);
+    font-size:12px;
+    font-weight:900;
+    color: var(--gold2);
+  }
+
+  /* カードの軽い揺れ（勝ち時だけ） */
+  @keyframes wiggle{
+    0%{ transform: translateY(0) rotate(0deg); }
+    25%{ transform: translateY(-2px) rotate(-1deg); }
+    50%{ transform: translateY(0) rotate(1deg); }
+    75%{ transform: translateY(-2px) rotate(-1deg); }
+    100%{ transform: translateY(0) rotate(0deg); }
+  }
+  .wiggle{ animation: wiggle .35s ease-in-out 2; }
+
+  /* 小さめ端末調整 */
+  @media (max-width:420px){
+    :root{ --cardW:62px; --cardH:92px; }
+    .title{ font-size:17px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="title">♠ 一人用ドローポーカー ♣（CPU対戦）</div>
+    <div class="stats">
+      <div class="pill">所持金 <b id="money">$10000</b></div>
+      <div class="pill">掛け金 <b id="bet">$0</b></div>
+      <div class="pill">連勝 <b id="streak">0</b></div>
+    </div>
+  </div>
+
+  <div class="board" id="board">
+    <div class="fxwin" id="fxwin"></div>
+
+    <div class="rowhead">
+      <div class="who">CPU</div>
+      <div class="role">役 <span class="tag" id="cpuRoleTag">—</span></div>
+    </div>
+    <div class="cards" id="cpuCards"></div>
+
+    <div class="rowhead" style="margin-top:6px;">
+      <div class="who">あなた（タップでHOLD）</div>
+      <div class="role">役 <span class="tag" id="plRoleTag">—</span></div>
+    </div>
+    <div class="cards" id="plCards"></div>
+
+    <div class="msg" id="msg">BET → DEAL → HOLD → DRAW</div>
+    <div class="submsg" id="submsg">CPUはズルなし。HARDはちゃんと腹立つ程度に強い。</div>
+  </div>
+
+  <div class="controls">
+    <div class="panel">
+      <div class="btnrow" id="betRow">
+        <button class="betbtn" data-bet="100">$100</button>
+        <button class="betbtn" data-bet="500">$500</button>
+        <button class="betbtn" data-bet="1000">$1000</button>
+      </div>
+      <div class="btnrow" style="margin-top:8px;">
+        <button class="dealbtn" id="dealBtn">DEAL</button>
+        <button class="drawbtn" id="drawBtn" disabled>DRAW</button>
+        <button class="resetbtn" id="resetBtn">$10000スタート</button>
+      </div>
+
+      <div class="difficulty">
+        <span style="font-weight:900;opacity:.92;">CPU</span>
+        <button class="diffbtn" data-diff="EASY">EASY</button>
+        <button class="diffbtn" data-diff="NORMAL">NORMAL</button>
+        <button class="diffbtn" data-diff="HARD">HARD</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================
+   永続化キー
+========================= */
+const KEY_MONEY = "poker_money_v2";
+const KEY_STREAK = "poker_streak_v2";
+const KEY_DIFF = "poker_diff_v2";
+
+/* =========================
+   カード定義
+========================= */
+const SUITS = [
+  {s:"♠", color:"#111111", name:"spades"},
+  {s:"♥", color:"#c2182b", name:"hearts"},
+  {s:"♦", color:"#c2182b", name:"diamonds"},
+  {s:"♣", color:"#111111", name:"clubs"},
+];
+const RANKS = ["2","3","4","5","6","7","8","9","10","J","Q","K","A"];
+const rankValue = (r) => RANKS.indexOf(r) + 2; // 2..14
+
+function makeDeck(){
+  const d=[];
+  for(const suit of SUITS){
+    for(const r of RANKS) d.push({suit, r});
+  }
+  // Fisher-Yates
+  for(let i=d.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [d[i], d[j]] = [d[j], d[i]];
+  }
+  return d;
+}
+
+/* =========================
+   SVGカード（画像化：内蔵）
+========================= */
+function svgEsc(str){
+  return String(str)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&apos;");
+}
+
+function cardSVG(card){
+  const r = card.r;
+  const s = card.suit.s;
+  const color = card.suit.color;
+  const bg1 = "#ffffff";
+  const bg2 = "#f1f1f1";
+
+  // それっぽい“印刷感”
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="240" height="340" viewBox="0 0 240 340">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${bg1}"/>
+        <stop offset=".55" stop-color="${bg2}"/>
+        <stop offset="1" stop-color="#dedede"/>
+      </linearGradient>
+      <radialGradient id="hl" cx="0.25" cy="0.18" r="0.8">
+        <stop offset="0" stop-color="rgba(255,255,255,.95)"/>
+        <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+      </radialGradient>
+      <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="rgba(0,0,0,.35)"/>
+      </filter>
+    </defs>
+    <rect x="12" y="12" width="216" height="316" rx="22" fill="url(#g)" stroke="rgba(0,0,0,.20)" stroke-width="6" filter="url(#ds)"/>
+    <rect x="18" y="18" width="204" height="304" rx="18" fill="none" stroke="rgba(0,0,0,.10)" stroke-width="4"/>
+    <rect x="12" y="12" width="216" height="316" rx="22" fill="url(#hl)" opacity=".85"/>
+
+    <text x="34" y="62" font-size="44" font-weight="800" fill="${color}" font-family="system-ui, -apple-system, Segoe UI, sans-serif">${svgEsc(r)}</text>
+    <text x="38" y="98" font-size="44" font-weight="800" fill="${color}" font-family="system-ui, -apple-system, Segoe UI, sans-serif">${svgEsc(s)}</text>
+
+    <text x="120" y="210" text-anchor="middle" font-size="120" font-weight="900" fill="${color}" opacity=".92" font-family="system-ui, -apple-system, Segoe UI, sans-serif">${svgEsc(s)}</text>
+    <text x="206" y="310" text-anchor="end" font-size="44" font-weight="800" fill="${color}" font-family="system-ui, -apple-system, Segoe UI, sans-serif">${svgEsc(r)}</text>
+    <text x="202" y="274" text-anchor="end" font-size="44" font-weight="800" fill="${color}" font-family="system-ui, -apple-system, Segoe UI, sans-serif">${svgEsc(s)}</text>
+  </svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.trim());
+}
+
+function cardBackSVG(){
+  const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="240" height="340" viewBox="0 0 240 340">
+    <defs>
+      <linearGradient id="b" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0b2a78"/>
+        <stop offset=".55" stop-color="#0b66ff"/>
+        <stop offset="1" stop-color="#041a46"/>
+      </linearGradient>
+      <pattern id="p" width="40" height="40" patternUnits="userSpaceOnUse">
+        <path d="M0 20 L20 0 L40 20 L20 40 Z" fill="rgba(255,255,255,.08)"/>
+      </pattern>
+      <filter id="ds" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="rgba(0,0,0,.35)"/>
+      </filter>
+    </defs>
+    <rect x="12" y="12" width="216" height="316" rx="22" fill="url(#b)" stroke="rgba(0,0,0,.22)" stroke-width="6" filter="url(#ds)"/>
+    <rect x="18" y="18" width="204" height="304" rx="18" fill="url(#p)" opacity=".85"/>
+    <rect x="26" y="26" width="188" height="288" rx="14" fill="none" stroke="rgba(255,210,80,.45)" stroke-width="6"/>
+    <text x="120" y="195" text-anchor="middle" font-size="74" font-weight="900" fill="rgba(255,210,80,.90)" font-family="system-ui, -apple-system, Segoe UI, sans-serif">POKER</text>
+    <text x="120" y="240" text-anchor="middle" font-size="34" font-weight="900" fill="rgba(255,255,255,.85)" font-family="system-ui, -apple-system, Segoe UI, sans-serif">NIKAIDO STYLE</text>
+  </svg>`;
+  return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg.trim());
+}
+const BACK_SRC = cardBackSVG();
+
+/* =========================
+   役判定（日本語）
+   返り値：{cat, name, tiebreak[]}
+   cat: 0..8（大きいほど強い）
+========================= */
+const ROLE_NAME = [
+  "ブタ",
+  "ワンペア",
+  "ツーペア",
+  "スリーカード",
+  "ストレート",
+  "フラッシュ",
+  "フルハウス",
+  "フォーカード",
+  "ストレートフラッシュ"
+];
+
+function isStraight(valsAsc){
+  // valsAsc: 昇順・重複なしにする前提
+  // A2345（14,2,3,4,5）対応：Aを1扱い
+  const a = [...valsAsc].sort((x,y)=>x-y);
+  // 通常
+  let ok = true;
+  for(let i=1;i<a.length;i++){
+    if(a[i] !== a[i-1] + 1){ ok=false; break; }
+  }
+  if(ok) return {ok:true, high:a[4]};
+  // A2345
+  const b = a.map(v => v===14 ? 1 : v).sort((x,y)=>x-y);
+  ok=true;
+  for(let i=1;i<b.length;i++){
+    if(b[i] !== b[i-1] + 1){ ok=false; break; }
+  }
+  if(ok) return {ok:true, high:5};
+  return {ok:false, high:0};
+}
+
+function evalHand(hand){
+  // values
+  const vals = hand.map(c => rankValue(c.r)).sort((a,b)=>a-b);
+  const suit0 = hand[0].suit.name;
+  const flush = hand.every(c => c.suit.name === suit0);
+
+  // counts
+  const countMap = new Map();
+  for(const v of vals) countMap.set(v, (countMap.get(v)||0)+1);
+
+  // unique
+  const uniq = [...countMap.keys()].sort((a,b)=>a-b);
+  const straightInfo = (uniq.length===5) ? isStraight(uniq) : {ok:false, high:0};
+  const straight = straightInfo.ok;
+
+  // groups: [count, value] sorted by count desc then value desc
+  const groups = [...countMap.entries()]
+    .map(([v,c]) => [c,v])
+    .sort((a,b)=> (b[0]-a[0]) || (b[1]-a[1]));
+
+  // helper: kickers descending excluding chosen values
+  const kickers = (excludeVals=[]) => {
+    const ex = new Set(excludeVals);
+    return vals.filter(v=>!ex.has(v)).sort((a,b)=>b-a);
+  };
+
+  if(straight && flush){
+    return {cat:8, name:ROLE_NAME[8], tiebreak:[straightInfo.high]};
+  }
+  if(groups[0][0]===4){
+    const quad = groups[0][1];
+    return {cat:7, name:ROLE_NAME[7], tiebreak:[quad, ...kickers([quad])]};
+  }
+  if(groups[0][0]===3 && groups[1][0]===2){
+    const trip = groups[0][1], pair = groups[1][1];
+    return {cat:6, name:ROLE_NAME[6], tiebreak:[trip, pair]};
+  }
+  if(flush){
+    const desc = [...vals].sort((a,b)=>b-a);
+    return {cat:5, name:ROLE_NAME[5], tiebreak:desc};
+  }
+  if(straight){
+    return {cat:4, name:ROLE_NAME[4], tiebreak:[straightInfo.high]};
+  }
+  if(groups[0][0]===3){
+    const trip = groups[0][1];
+    return {cat:3, name:ROLE_NAME[3], tiebreak:[trip, ...kickers([trip])]};
+  }
+  if(groups[0][0]===2 && groups[1][0]===2){
+    const p1 = Math.max(groups[0][1], groups[1][1]);
+    const p2 = Math.min(groups[0][1], groups[1][1]);
+    return {cat:2, name:ROLE_NAME[2], tiebreak:[p1, p2, ...kickers([p1,p2])]};
+  }
+  if(groups[0][0]===2){
+    const p = groups[0][1];
+    return {cat:1, name:ROLE_NAME[1], tiebreak:[p, ...kickers([p])]};
+  }
+  const desc = [...vals].sort((a,b)=>b-a);
+  return {cat:0, name:ROLE_NAME[0], tiebreak:desc};
+}
+
+function cmpRank(a,b){
+  if(a.cat !== b.cat) return a.cat - b.cat;
+  const n = Math.max(a.tiebreak.length, b.tiebreak.length);
+  for(let i=0;i<n;i++){
+    const av = a.tiebreak[i]||0;
+    const bv = b.tiebreak[i]||0;
+    if(av !== bv) return av - bv;
+  }
+  return 0;
+}
+
+/* =========================
+   CPU：難易度（ズルなし）
+   keep[i]=trueで保持
+========================= */
+function cpuChooseKeep(hand, diff){
+  // 基本情報
+  const vals = hand.map(c => rankValue(c.r));
+  const suits = hand.map(c => c.suit.name);
+
+  const countMap = new Map();
+  for(const v of vals) countMap.set(v, (countMap.get(v)||0)+1);
+
+  const keep = [false,false,false,false,false];
+
+  // ユーティリティ
+  const keepByValue = (v) => { hand.forEach((c,i)=>{ if(rankValue(c.r)===v) keep[i]=true; }); };
+  const keepBySuit = (s) => { hand.forEach((c,i)=>{ if(c.suit.name===s) keep[i]=true; }); };
+
+  // 役っぽいものを見つける
+  const pairs = [...countMap.entries()].filter(([v,c])=>c===2).map(([v])=>v).sort((a,b)=>b-a);
+  const trips = [...countMap.entries()].filter(([v,c])=>c===3).map(([v])=>v);
+  const quads = [...countMap.entries()].filter(([v,c])=>c===4).map(([v])=>v);
+
+  const suitCounts = suits.reduce((m,s)=> (m[s]=(m[s]||0)+1, m), {});
+  const flushSuit = Object.entries(suitCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  // 連番（4枚ストレート狙い）
+  const uniq = [...new Set(vals)].sort((a,b)=>a-b);
+  function bestFourStraightKeep(){
+    // 5枚から4枚残してストレート可能性高いものを探す（ざっくり）
+    const candidates = [];
+    // Aを1にも見る
+    const u1 = [...new Set(uniq.map(v=>v===14?1:v))].sort((a,b)=>a-b);
+    const us = [uniq, u1];
+    for(const u of us){
+      for(let start=1; start<=10; start++){
+        const need = [start,start+1,start+2,start+3,start+4];
+        const have = need.filter(x=>u.includes(x));
+        if(have.length===4){
+          candidates.push(have.map(v=>v===1?14:v)); // 表示はA=14に戻す
+        }
+      }
+    }
+    if(candidates.length===0) return null;
+    // 高い方を優先
+    candidates.sort((a,b)=> b.reduce((s,x)=>s+x,0) - a.reduce((s,x)=>s+x,0));
+    return candidates[0];
+  }
+
+  // EASY：適当（強い形は時々保持する程度）
+  if(diff==="EASY"){
+    // たまにペアだけ保持
+    if(pairs.length && Math.random()<0.55){ keepByValue(pairs[0]); return keep; }
+    // たまに高いカード1枚保持
+    const idx = vals.indexOf(Math.max(...vals));
+    if(idx>=0 && Math.random()<0.35) keep[idx]=true;
+    // それ以外はランダムで0〜2枚保持
+    const k = Math.floor(Math.random()*3);
+    for(let t=0;t<k;t++) keep[Math.floor(Math.random()*5)] = true;
+    return keep;
+  }
+
+  // NORMAL/HARD：まず現役を崩さない
+  if(quads.length){ keepByValue(quads[0]); return keep; }
+  if(trips.length && pairs.length){ keepByValue(trips[0]); keepByValue(pairs[0]); return keep; }
+  if(trips.length){
+    keepByValue(trips[0]);
+    // NORMAL: 1枚だけ高いキッカー保持
+    if(diff==="NORMAL"){
+      let best=-1, bi=-1;
+      hand.forEach((c,i)=>{ const v=rankValue(c.r); if(!keep[i] && v>best){best=v; bi=i;} });
+      if(bi>=0) keep[bi]=true;
+    }
+    return keep;
+  }
+  if(pairs.length>=2){
+    keepByValue(pairs[0]);
+    keepByValue(pairs[1]);
+    return keep;
+  }
+  if(pairs.length===1){
+    keepByValue(pairs[0]);
+    // HARD: 4枚フラッシュ狙いが見えたらそっち優先、なければ高キッカー保持
+    if(diff==="HARD"){
+      // 4フラッシュがあるならペアよりフラッシュ狙いを優先しない（強すぎるので控えめ）
+      // ここは「ペア保持＋高キッカー保持」
+      let best=-1, bi=-1;
+      hand.forEach((c,i)=>{ const v=rankValue(c.r); if(!keep[i] && v>best){best=v; bi=i;} });
+      if(bi>=0) keep[bi]=true;
+    }
+    return keep;
+  }
+
+  // フラッシュ狙い（4枚同スート）
+  if(flushSuit && flushSuit[1]===4){
+    // NORMAL: フラッシュ狙い
+    if(diff==="NORMAL"){
+      keepBySuit(flushSuit[0]);
+      return keep;
+    }
+    // HARD: フラッシュ狙い + ついでにストレートも見えるならそっち優先
+    if(diff==="HARD"){
+      // 4ストレートが作れるなら、フラッシュよりストレート（引き1枚）のほうを優先（気分的に強い）
+      const s4 = bestFourStraightKeep();
+      if(s4){
+        hand.forEach((c,i)=>{ if(s4.includes(rankValue(c.r))) keep[i]=true; });
+        return keep;
+      }
+      keepBySuit(flushSuit[0]);
+      return keep;
+    }
+  }
+
+  // ストレート狙い（4枚連番）
+  const s4 = bestFourStraightKeep();
+  if(s4){
+    // NORMAL: ストレート狙い
+    if(diff==="NORMAL"){
+      hand.forEach((c,i)=>{ if(s4.includes(rankValue(c.r))) keep[i]=true; });
+      return keep;
+    }
+    // HARD: ストレート狙い（より確実に4枚保持）
+    if(diff==="HARD"){
+      hand.forEach((c,i)=>{ if(s4.includes(rankValue(c.r))) keep[i]=true; });
+      return keep;
+    }
+  }
+
+  // 何もない：高いカード保持
+  // NORMAL: 1枚、HARD: 2枚
+  const order = hand.map((c,i)=>({i,v:rankValue(c.r)})).sort((a,b)=>b.v-a.v);
+  keep[order[0].i]=true;
+  if(diff==="HARD") keep[order[1].i]=true;
+  return keep;
+}
+
+/* =========================
+   サウンド（任意：無音でも動く）
+   うるさくしたくないので最小。
+========================= */
+let audioCtx=null;
+function blip(freq=880, ms=60, vol=0.08){
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type="triangle";
+    o.frequency.value=freq;
+    g.gain.value=vol;
+    o.connect(g).connect(audioCtx.destination);
+    o.start();
+    setTimeout(()=>{ o.stop(); }, ms);
+  }catch{}
+}
+
+/* =========================
+   UI / 状態
+========================= */
+const $ = (id)=>document.getElementById(id);
+const cpuCardsEl = $("cpuCards");
+const plCardsEl  = $("plCards");
+const plRoleTag = $("plRoleTag");
+const cpuRoleTag = $("cpuRoleTag");
+const msgEl = $("msg");
+const submsgEl = $("submsg");
+const dealBtn = $("dealBtn");
+const drawBtn = $("drawBtn");
+const resetBtn = $("resetBtn");
+const betRow = $("betRow");
+const board = $("board");
+const fxwin = $("fxwin");
+
+let deck = [];
+let player = [];
+let cpu = [];
+let hold = [false,false,false,false,false];
+let bet = 0;
+let phase = "IDLE"; // IDLE | DEALT | DONE
+let money = loadInt(KEY_MONEY, 10000);
+let streak = loadInt(KEY_STREAK, 0);
+let diff = loadStr(KEY_DIFF, "NORMAL");
+
+function loadInt(k, def){
+  const v = parseInt(localStorage.getItem(k) || String(def), 10);
+  return Number.isFinite(v) ? v : def;
+}
+function loadStr(k, def){
+  const v = localStorage.getItem(k);
+  return (v===null || v==="") ? def : v;
+}
+function save(){
+  localStorage.setItem(KEY_MONEY, String(money));
+  localStorage.setItem(KEY_STREAK, String(streak));
+  localStorage.setItem(KEY_DIFF, diff);
+}
+
+function fmtMoney(n){ return "$" + n; }
+
+function setBet(v){
+  bet = v;
+  $("bet").textContent = fmtMoney(bet);
+  [...betRow.querySelectorAll("button")].forEach(b=>{
+    b.classList.toggle("active", parseInt(b.dataset.bet,10)===v);
+  });
+  updateButtons();
+}
+function setDiff(v){
+  diff = v;
+  [...document.querySelectorAll(".diffbtn")].forEach(b=>{
+    b.classList.toggle("active", b.dataset.diff===v);
+  });
+  save();
+  submsgEl.textContent = (diff==="EASY")
+    ? "EASY：接待。気持ちよく勝てる。"
+    : (diff==="NORMAL")
+      ? "NORMAL：ちょうど楽しい。"
+      : "HARD：ズルなしで強い。ちょっと腹立つ。";
+}
+
+function updateTop(){
+  $("money").textContent = fmtMoney(money);
+  $("streak").textContent = String(streak);
+}
+
+function updateButtons(){
+  dealBtn.disabled = !(bet>0 && money>=bet && phase!=="DEALT");
+  drawBtn.disabled = !(phase==="DEALT");
+}
+
+function clearHands(){
+  player=[]; cpu=[]; hold=[false,false,false,false,false];
+  plRoleTag.textContent = "—";
+  cpuRoleTag.textContent = "—";
+  render();
+}
+
+function render(){
+  // CPU
+  cpuCardsEl.innerHTML = "";
+  cpu.forEach((c,i)=>{
+    const div = document.createElement("div");
+    div.className = "card";
+    const img = document.createElement("img");
+    img.alt = "CPU";
+    img.src = (phase==="DONE") ? cardSVG(c) : BACK_SRC;
+    div.appendChild(img);
+    cpuCardsEl.appendChild(div);
+  });
+
+  // Player
+  plCardsEl.innerHTML = "";
+  player.forEach((c,i)=>{
+    const div = document.createElement("div");
+    div.className = "card" + (hold[i] ? " hold":"");
+    div.title = "タップでHOLD";
+    const img = document.createElement("img");
+    img.alt = c.suit.s + c.r;
+    img.src = cardSVG(c);
+    div.appendChild(img);
+
+    const badge = document.createElement("div");
+    badge.className = "holdbadge";
+    badge.textContent = "HOLD";
+    div.appendChild(badge);
+
+    div.onclick = ()=>{
+      if(phase!=="DEALT") return;
+      hold[i] = !hold[i];
+      blip(hold[i]?880:520, 40, 0.06);
+      render();
+    };
+    plCardsEl.appendChild(div);
+  });
+
+  updateTop();
+  updateButtons();
+}
+
+/* =========================
+   ゲーム進行
+========================= */
+function deal(){
+  if(!(bet>0 && money>=bet)) return;
+
+  deck = makeDeck();
+  player = deck.splice(0,5);
+  cpu = deck.splice(0,5);
+  hold = [false,false,false,false,false];
+  phase = "DEALT";
+
+  fxwin.classList.remove("on");
+  board.classList.remove("wiggle");
+  msgEl.textContent = "カードをタップしてHOLD → DRAW";
+  plRoleTag.textContent = "—";
+  cpuRoleTag.textContent = "—";
+
+  // 軽い配布音
+  blip(660, 60, 0.05);
+  setTimeout(()=>blip(880, 60, 0.05), 80);
+  render();
+}
+
+function draw(){
+  if(phase!=="DEALT") return;
+
+  // プレイヤー引き直し
+  for(let i=0;i<5;i++){
+    if(!hold[i]) player[i] = deck.pop();
+  }
+
+  // CPU引き直し（難易度）
+  const keep = cpuChooseKeep(cpu, diff);
+  for(let i=0;i<5;i++){
+    if(!keep[i]) cpu[i] = deck.pop();
+  }
+
+  phase = "DONE";
+  const pr = evalHand(player);
+  const cr = evalHand(cpu);
+
+  plRoleTag.textContent = pr.name;
+  cpuRoleTag.textContent = cr.name;
+
+  const c = cmpRank(pr, cr);
+  // c>0: player win
+  let delta = 0;
+  if(c>0){
+    delta = bet;
+    money += bet;
+    streak += 1;
+
+    // 勝利演出（派手）
+    fxwin.classList.add("on");
+    board.classList.add("wiggle");
+    blip(988, 80, 0.08);
+    setTimeout(()=>blip(1318, 100, 0.08), 90);
+
+    msgEl.innerHTML = `勝ち！ +${fmtMoney(bet)} <span class="streak">WIN ×${streak}</span>`;
+  }else if(c<0){
+    delta = -bet;
+    money -= bet;
+    streak = 0;
+
+    // 負け演出は地味（“もう1回”のため）
+    blip(220, 90, 0.06);
+    msgEl.textContent = `負け… ${fmtMoney(-bet)}`;
+  }else{
+    delta = 0;
+    // 引き分け：地味
+    blip(440, 60, 0.05);
+    msgEl.textContent = "引き分け（掛け金変動なし）";
+  }
+
+  if(money<0) money = 0;
+  save();
+  render();
+
+  // 次ゲーム案内
+  setTimeout(()=>{
+    if(money===0){
+      msgEl.textContent = "所持金が$0。$10000スタートで復活できる。";
+    }else{
+      msgEl.textContent += "　（次はDEAL）";
+    }
+    // 勝ち演出は少しで消す
+    setTimeout(()=>fxwin.classList.remove("on"), 650);
+    board.classList.remove("wiggle");
+  }, 300);
+}
+
+function resetMoney(){
+  money = 10000;
+  streak = 0;
+  save();
+  updateTop();
+  updateButtons();
+  blip(740, 80, 0.06);
+  msgEl.textContent = "$10000スタート。さあDEAL。";
+}
+
+function newRoundIfDone(){
+  if(phase==="DONE"){
+    // “それ以外はそのまま”のため、手札は残さずに次はDEALで再配布
+    clearHands();
+    phase="IDLE";
+    fxwin.classList.remove("on");
+    board.classList.remove("wiggle");
+    msgEl.textContent = "BET → DEAL → HOLD → DRAW";
+    updateButtons();
+  }
+}
+
+/* =========================
+   イベント
+========================= */
+betRow.addEventListener("click",(e)=>{
+  const b = e.target.closest("button[data-bet]");
+  if(!b) return;
+  setBet(parseInt(b.dataset.bet,10));
+});
+dealBtn.onclick = ()=>{
+  if(phase==="DONE") newRoundIfDone();
+  deal();
+};
+drawBtn.onclick = draw;
+resetBtn.onclick = resetMoney;
+
+document.querySelectorAll(".diffbtn").forEach(b=>{
+  b.onclick = ()=>setDiff(b.dataset.diff);
+});
+
+/* =========================
+   初期化
+========================= */
+setDiff(diff);
+updateTop();
+$("bet").textContent = fmtMoney(bet);
+clearHands();
+phase="IDLE";
+updateButtons();
+
+/* 初期表示：CPUもプレイヤーも空の状態にせず、見た目を作る */
+function showPlaceholders(){
+  const dummy = {suit:SUITS[0], r:"A"};
+  cpu = [dummy,dummy,dummy,dummy,dummy];
+  player = [dummy,dummy,dummy,dummy,dummy];
+  phase="IDLE";
+  render();
+  // placeholdersはクリック不可＆cpuは裏
+  cpuRoleTag.textContent="—";
+  plRoleTag.textContent="—";
+  // すぐ空に戻して、表示だけ維持（実体は空）
+  cpu=[]; player=[];
+  render();
+}
+showPlaceholders();
+</script>
+</body>
+</html>
